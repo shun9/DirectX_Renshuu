@@ -4,8 +4,8 @@
 #include <SL_ConstantNumber.h>
 #include <SL_RandomNumber.h>
 
-#include <DirectXMath.h>
-
+#include <WICTextureLoader.h>
+#include <DirectXTex.h>
 const int ShunLib::Graphics::MAX_MODEL;
 
 HRESULT ShunLib::Graphics::InitShader()
@@ -19,7 +19,7 @@ HRESULT ShunLib::Graphics::InitShader()
 	ID3DBlob* error = NULL;
 
 	//バーテックスシェーダーのブロブを作成
-	if (FAILED(D3DCompileFromFile(L"Simple.hlsl", NULL, NULL, "VS", "vs_4_0", 0, 0, &compiledShader, &error)))
+	if (FAILED(D3DCompileFromFile(L"Simple.hlsl", NULL, NULL, "VS", "vs_5_0", 0, 0, &compiledShader, &error)))
 	{
 		MessageBox(0, L"hlsl読み込み失敗",NULL,MB_OK);
 		return E_FAIL;
@@ -37,7 +37,8 @@ HRESULT ShunLib::Graphics::InitShader()
 	//頂点インプットレイアウトを定義
 	D3D11_INPUT_ELEMENT_DESC layout[] = {
 		{"POSITION",0,DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0},
-		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		//{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 
 	UINT numElement = sizeof(layout) / sizeof(layout[0]);
@@ -91,10 +92,10 @@ HRESULT ShunLib::Graphics::InitPolygon()
 
 	//バーテックスバッファを作成
 	SimpleVertex vertex[] = {
-		{Vec3(-0.5f,-0.5f,0.0f),Vec3(0.0f,0.0f,-1.0f)},
-		{Vec3(-0.5f,0.5f,0.0f),Vec3(0.0f,0.0f,-1.0f)},
-		{Vec3(0.5f,-0.5f,0.0f),Vec3(0.0f,0.0f,-1.0f)},
-		{Vec3(0.5f,0.5f,0.0f),Vec3(0.0f,0.0f,-1.0f)},
+		{Vec3(-0.5f,-0.5f,0.0f),Vec2(0.0f,1.0f)},
+		{Vec3(-0.5f,0.5f,0.0f),Vec2(0.0f,0.0f)},
+		{Vec3(0.5f,-0.5f,0.0f),Vec2(1.0f,1.0f)},
+		{Vec3(0.5f,0.5f,0.0f),Vec2(1.0f,0.0f)},
 	};
 
 	D3D11_BUFFER_DESC bd;
@@ -116,19 +117,45 @@ HRESULT ShunLib::Graphics::InitPolygon()
 	UINT offset = 0;
 	context->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
 	
+	//テクスチャ―のサンプラーを作成
+	D3D11_SAMPLER_DESC samDesc;
+	ZeroMemory(&samDesc, sizeof(D3D11_SAMPLER_DESC));
+	samDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	samDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	if (FAILED(device->CreateSamplerState(&samDesc, &m_sampleLinear)))
+	{
+		return E_FAIL;
+	}
+
+	//テクスチャ―の読み込み
+	DirectX::TexMetadata metadata;
+	DirectX::ScratchImage image;
+	if (FAILED(LoadFromWICFile(L"IMG_0150.JPG", 0, &metadata, image))) {
+		return E_FAIL;
+	}
+	
+	//テクスチャーからシェーダーリソースを作成
+	if (FAILED(DirectX::CreateShaderResourceView(device, image.GetImages(), image.GetImageCount(), metadata, &m_texture))) {
+		return E_FAIL;
+	}
+
+	context->PSSetSamplers(0,1,&m_sampleLinear);
+	context->PSSetShaderResources(0, 1, &m_texture);
 	return S_OK;
 }
 
 
 void ShunLib::Graphics::TestUpdate()
 {
-	if (GetKeyState(VK_RIGHT))
-	{
-		for (int i = 0; i < MAX_MODEL; i++)
-		{
-			m_model[i].pos.m_x += 0.01f;
-		}
-	}
+	//if (GetKeyState(VK_RIGHT))
+	//{
+	//	for (int i = 0; i < MAX_MODEL; i++)
+	//	{
+	//		m_model[i].pos.m_x += 0.01f;
+	//	}
+	//}
 }
 
 
@@ -143,7 +170,7 @@ void ShunLib::Graphics::TestRender()
 	Matrix proj;
 	
 	//ビュー行列作成
-	Vec3 eyePos(2.0f, 2.0f, 2.0f);
+	Vec3 eyePos(1.0f, 1.0f, 2.0f);
 	Vec3 lookAt(0.0f, 0.0f, 0.0f);
 	Vec3 Up(0.0f, 1.0f, 0.0f);
 	
@@ -162,18 +189,23 @@ void ShunLib::Graphics::TestRender()
 	SIMPLESHADER_CONSTANT_BUFFER cb;
 	if (SUCCEEDED(context->Map(m_constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &data)))
 	{
-		world = Matrix::CreateTranslation(m_model[0].pos);
+		//行列を渡す
+		//world = Matrix::CreateTranslation(m_model[0].pos);
 		Matrix m = world*view*proj;
-		m = Matrix::Transpose(m);
-		world = Matrix::Transpose(world);
+		cb.mWVP = Matrix::Transpose(m);
+		//cb.world = Matrix::Transpose(world);
 
-		cb.mWVP = m;
-		cb.world = world;
+		//色を渡す
+		//m_model[0].color = { 1,1,0,1 };
+		//cb.color = m_model[0].color;
+		cb.color = Vec4(1, 0, 0, 1);
 
-		m_model[0].color = { 1,0,0,1 };
-		cb.color = m_model[0].color;
-		cb.lightDir = m_lightDir.Normalize();
+		//ライトの方向を渡す
+		//cb.lightDir = m_lightDir.Normalize();
 
+		//視点を渡す
+		//cb.eyePos = Vec4(eyePos.m_x, eyePos.m_y, eyePos.m_z,0.0f);
+		
 		memcpy_s(data.pData, data.RowPitch, (void*)(&cb), sizeof(cb));
 		context->Unmap(m_constantBuffer, 0);
 	}

@@ -78,10 +78,10 @@ HRESULT InitGraphics()
 {
 	auto graphics = ShunLib::Graphics::GetInstance();
 
-	//ウィンドウ作成
+	//シェーダーの読み込み
 	if (SUCCEEDED(graphics->InitShader()))
 	{
-		//DirectX関連の初期化
+		//描画関連の設定
 		if (SUCCEEDED(graphics->InitPolygon()))
 		{
 			return S_OK;

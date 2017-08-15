@@ -1,5 +1,6 @@
 #pragma once
 #include <SL_Singleton.h>
+#include <SL_Vec2.h>
 #include <SL_Vec3.h>
 #include <SL_Vec4.h>
 #include <SL_Matrix.h>
@@ -10,26 +11,27 @@
 //頂点の構造体
 struct SimpleVertex
 {
-	ShunLib::Vec3 pos; //位置
-	ShunLib::Vec3 Normal;//法線
+	ShunLib::Vec3 pos;   //位置
+	ShunLib::Vec2 texturePos;//テクスチャ―座標
 };
 
 //Simpleシェーダー用のコンスタントバッファーのアプリ側構造体 
 //シェーダー内のコンスタントバッファーと一致している必要あり
 struct SIMPLESHADER_CONSTANT_BUFFER
 {
-	ShunLib::Matrix world;//ワールド行列
-	ShunLib::Matrix mWVP;//ワールド、ビュー、射影の合成変換行列
-	ShunLib::Vec4 lightDir;//ライトの方向
-	ShunLib::Vec4 color;//ポリゴン色
+	//ShunLib::Matrix world; //ワールド行列
+	ShunLib::Matrix mWVP;  //ワールド、ビュー、射影の合成変換行列
+	//ShunLib::Vec4 lightDir;//ライトの方向
+	ShunLib::Vec4 color;   //ポリゴン色
+	//ShunLib::Vec4 eyePos;  //カメラ位置
 };
 
-//物体の構造体
-struct Model
-{
-	ShunLib::Vec3 pos;
-	ShunLib::Vec4 color;
-};
+////物体の構造体
+//struct Model
+//{
+//	ShunLib::Vec3 pos;
+//	ShunLib::Vec4 color;
+//};
 
 namespace ShunLib {
 	class Graphics :public Singleton<Graphics>
@@ -48,10 +50,13 @@ namespace ShunLib {
 
 		//モデルごとに必要
 		ID3D11Buffer* m_vertexBuffer;//頂点バッファー　頂点を保存しておく領域
+		ID3D11SamplerState* m_sampleLinear; //テクスチャ―のサンプラー
+		ID3D11ShaderResourceView* m_texture;//テクスチャ―
 
-		Model m_model[MAX_MODEL];
+		//Model m_model[MAX_MODEL];
 
-		ShunLib::Vec4 m_lightDir;
+		//ライトの方向
+		//ShunLib::Vec4 m_lightDir;
 
 	public:
 		HRESULT InitShader();
@@ -61,8 +66,9 @@ namespace ShunLib {
 		void TestRender();
 
 	private:
-		Graphics() { m_lightDir = { 0,10,-5.0f,0 }; }
-		~Graphics() { 
+		Graphics() { //m_lightDir = { 0,2.5f,-1.0f,0 }; 
+		}
+		~Graphics() {
 			SAFE_RELEASE(m_constantBuffer);
 			SAFE_RELEASE(m_vertexShader);
 			SAFE_RELEASE(m_pixelShader);
