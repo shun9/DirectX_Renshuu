@@ -82,7 +82,7 @@ HRESULT InitGraphics()
 	if (SUCCEEDED(graphics->InitShader()))
 	{
 		//•`‰æŠÖ˜A‚Ìİ’è
-		if (SUCCEEDED(graphics->InitPolygon()))
+		if (SUCCEEDED(graphics->InitStaticMesh("cube.obj",graphics->Mesh())))
 		{
 			return S_OK;
 		}

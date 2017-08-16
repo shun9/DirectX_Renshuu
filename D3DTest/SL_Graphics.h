@@ -12,33 +12,31 @@
 struct SimpleVertex
 {
 	ShunLib::Vec3 pos;   //位置
-	ShunLib::Vec2 texturePos;//テクスチャ―座標
 };
 
 //Simpleシェーダー用のコンスタントバッファーのアプリ側構造体 
 //シェーダー内のコンスタントバッファーと一致している必要あり
 struct SIMPLESHADER_CONSTANT_BUFFER
 {
-	//ShunLib::Matrix world; //ワールド行列
 	ShunLib::Matrix mWVP;  //ワールド、ビュー、射影の合成変換行列
-	//ShunLib::Vec4 lightDir;//ライトの方向
-	ShunLib::Vec4 color;   //ポリゴン色
-	//ShunLib::Vec4 eyePos;  //カメラ位置
 };
 
-////物体の構造体
-//struct Model
-//{
-//	ShunLib::Vec3 pos;
-//	ShunLib::Vec4 color;
-//};
+//オリジナルメッシュ
+struct MESH
+{
+	DWORD dwNumVert;
+	DWORD dwNumFace;//ポリゴン数
+	ID3D11Buffer* pVertexBuffer;
+
+	//頂点インデックスのバッファー
+	//頂点に番号を付け使い回す
+	ID3D11Buffer* pIndexBuffer;
+};
 
 namespace ShunLib {
 	class Graphics :public Singleton<Graphics>
 	{
 		friend Singleton<Graphics>;
-	private:
-		static const int MAX_MODEL = 2;
 
 	private:
 		//モデルの種類ごとに１つ
@@ -53,20 +51,28 @@ namespace ShunLib {
 		ID3D11SamplerState* m_sampleLinear; //テクスチャ―のサンプラー
 		ID3D11ShaderResourceView* m_texture;//テクスチャ―
 
-		//Model m_model[MAX_MODEL];
-
-		//ライトの方向
-		//ShunLib::Vec4 m_lightDir;
+		MESH m_mesh;
 
 	public:
 		HRESULT InitShader();
-		HRESULT InitPolygon();
+		HRESULT InitStaticMesh(LPSTR fileName, MESH* mesh);
 
 		void TestUpdate();
 		void TestRender();
 
+		MESH* Mesh() { return &m_mesh; }
+
 	private:
-		Graphics() { //m_lightDir = { 0,2.5f,-1.0f,0 }; 
+		Graphics() { 
+			m_vertexLayout   = nullptr;
+			m_vertexShader   = nullptr;
+			m_pixelShader    = nullptr;
+			m_constantBuffer = nullptr;
+			m_vertexBuffer   = nullptr;
+			m_sampleLinear   = nullptr;
+			m_texture        = nullptr;
+
+			ZeroMemory(&m_mesh, sizeof(m_mesh));
 		}
 		~Graphics() {
 			SAFE_RELEASE(m_constantBuffer);
