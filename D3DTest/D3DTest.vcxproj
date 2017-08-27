@@ -29,13 +29,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -72,16 +72,16 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\DirectXTex\WICTextureLoader;C:\DirectXTex\DirectXTex;C:\ShunLib\inc;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\DirectXTex\DirectXTex\Bin\Desktop_2017\Win32\Debug;C:\ShunLib\Debug;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\FBX SDK\2017.1\include;C:\DirectXTex\WICTextureLoader;C:\DirectXTex\DirectXTex;C:\ShunLib\inc;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\FBX SDK\2017.1\lib\vs2015\x86\debug;C:\DirectXTex\DirectXTex\Bin\Desktop_2017\Win32\Debug;C:\ShunLib\Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\DirectXTex\WICTextureLoader;C:\ShunLib\inc;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\DirectXTex\DirectXTex\Bin\Desktop_2017\Win32\Release;C:\ShunLib\Release;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\DirectXTex\DirectXTex;C:\FBX SDK\2017.1\include\fbxsdk;C:\DirectXTex\WICTextureLoader;C:\ShunLib\inc;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\FBX SDK\2017.1\lib\vs2015\x86\release;C:\DirectXTex\DirectXTex\Bin\Desktop_2017\Win32\Release;C:\ShunLib\Release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -92,12 +92,13 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>K_PLUCIN;K_FBXSDK;K_NODLL;KFBX_DLLINFO;WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>d3d11.lib;d3dcompiler.lib;DirectXTex.lib;ShunLib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libfbxsdk-mt.lib;d3d11.lib;d3dcompiler.lib;DirectXTex.lib;ShunLib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>LIBMCT;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -127,7 +128,7 @@
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>d3d11.lib;d3dcompiler.lib;DirectXTex.lib;ShunLib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libfbxsdk-mt.lib;d3d11.lib;d3dcompiler.lib;DirectXTex.lib;ShunLib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -147,11 +148,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="SL_FBXMesh.cpp" />
     <ClCompile Include="SL_Graphics.cpp" />
     <ClCompile Include="SL_Window.cpp" />
     <ClCompile Include="WinMain.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="SL_FBXMesh.h" />
     <ClInclude Include="SL_Graphics.h" />
     <ClInclude Include="SL_Window.h" />
   </ItemGroup>
