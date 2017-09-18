@@ -74,16 +74,19 @@ namespace ShunLib {
 			const wchar_t* fileName,
 			const char* entryPoint, 
 			const char* target, 
-			const D3D11_INPUT_ELEMENT_DESC layout[],
-			const UINT& layoutSize,
-			ID3D11VertexShader** vs,
-			ID3D11InputLayout** il);
+			ID3D11VertexShader** vs);
 
 		HRESULT CreatePixleShader(
 			const wchar_t* fileName, 
 			const char* entryPoint, 
 			const char* target, 
 			ID3D11PixelShader** ps);
+
+		HRESULT CreateInputLayout(
+			const D3D11_INPUT_ELEMENT_DESC layout[],
+			const UINT& layoutSize,
+			ID3D11InputLayout** il);
+		
 
 	private:
 		Graphics() { 

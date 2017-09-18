@@ -21,7 +21,13 @@ HRESULT ShunLib::Graphics::InitShader()
 	UINT numElements = sizeof(layout) / sizeof(layout[0]);
 
 	//バーテックスシェーダーを作成
-	if (FAILED(this->CreateVertexShader(L"Simple.hlsl", "VS", "vs_5_0", layout, numElements, &m_vertexShader, &m_vertexLayout)))
+	if (FAILED(this->CreateVertexShader(L"Simple.hlsl", "VS", "vs_5_0",&m_vertexShader)))
+	{
+		//作成失敗
+		return E_FAIL;
+	}
+
+	if (FAILED(this->CreateInputLayout(layout,numElements,&m_vertexLayout)))
 	{
 		//作成失敗
 		return E_FAIL;
@@ -332,10 +338,7 @@ HRESULT ShunLib::Graphics::CreateVertexShader(
 	const wchar_t* fileName,
 	const char* entryPoint,
 	const char* target,
-	const D3D11_INPUT_ELEMENT_DESC layout[],
-	const UINT& layoutSize,
-	ID3D11VertexShader** vs,
-	ID3D11InputLayout** il)
+	ID3D11VertexShader** vs)
 {
 	auto device = Window::GetInstance()->Device();
 
@@ -358,13 +361,6 @@ HRESULT ShunLib::Graphics::CreateVertexShader(
 		return E_FAIL;
 	}
 	
-	//頂点インプットレイアウトを作成
-	if (FAILED(device->CreateInputLayout(layout, layoutSize, compiledShader->GetBufferPointer(), compiledShader->GetBufferSize(), il)))
-	{
-		SAFE_RELEASE(compiledShader);
-		return E_FAIL;
-	}
-
 	SAFE_RELEASE(compiledShader);
 
 	return S_OK;
@@ -402,6 +398,26 @@ HRESULT ShunLib::Graphics::CreatePixleShader(
 		return E_FAIL;
 	}
 	
+	SAFE_RELEASE(compiledShader);
+
+	return S_OK;
+}
+
+HRESULT ShunLib::Graphics::CreateInputLayout(const D3D11_INPUT_ELEMENT_DESC layout[], const UINT & layoutSize, ID3D11InputLayout ** il)
+{
+	auto device = Window::GetInstance()->Device();
+
+	//hlslファイル読み込み用ブロブ
+	//ブロブの時点では何のシェーダーなのか分からない
+	ID3DBlob* compiledShader = NULL;
+
+	//頂点インプットレイアウトを作成
+	if (FAILED(device->CreateInputLayout(layout, layoutSize, compiledShader->GetBufferPointer(), compiledShader->GetBufferSize(), il)))
+	{
+		SAFE_RELEASE(compiledShader);
+		return E_FAIL;
+	}
+
 	SAFE_RELEASE(compiledShader);
 
 	return S_OK;

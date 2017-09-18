@@ -148,15 +148,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="SL_FbxSkinMesh.cpp" />
     <ClCompile Include="SL_FBXMesh.cpp" />
     <ClCompile Include="SL_Graphics.cpp" />
     <ClCompile Include="SL_Window.cpp" />
     <ClCompile Include="WinMain.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="SL_FbxSkinMesh.h" />
     <ClInclude Include="SL_FBXMesh.h" />
     <ClInclude Include="SL_Graphics.h" />
     <ClInclude Include="SL_Window.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="SKIN_MESH.hlsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

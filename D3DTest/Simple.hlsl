@@ -40,6 +40,7 @@ struct VS_OUTPUT
 //
 //バーテックスシェーダー
 //
+
 VS_OUTPUT VS(float4 pos : POSITION,float4 normal : NORMAL, float2 tex : TEXCOORD)// : SV_POSITION
 {
     //初期化
@@ -88,5 +89,4 @@ float4 PS(VS_OUTPUT input) : SV_Target
     //color = g_diffuse * lightPower + specular * g_specular;
 
     return color;
-
 }

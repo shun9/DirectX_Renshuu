@@ -50,7 +50,7 @@ HRESULT FBXMesh::InitFBX(CHAR* szFileName)
 }
 
 
-//素材（FBX)のほうは、三角ポリゴンにする
+//素材（FBX)は、三角ポリゴンにする
 HRESULT FBXMesh::CreateFromFBX(CHAR* FileName)
 {
 	//指定のファイルでFBX初期化
@@ -90,7 +90,6 @@ HRESULT FBXMesh::CreateFromFBX(CHAR* FileName)
 	m_dwNumUV = fbxMesh->GetTextureUVCount();
 	m_dwNumFace = fbxMesh->GetPolygonCount();
 	//一時的なメモリ確保（頂点バッファとインデックスバッファ）
-	//std::vector<FBX_VERTEX>pvVB;
 	FBX_VERTEX* pvVB = NULL;
 	m_dwNumVert < m_dwNumUV ? pvVB = new FBX_VERTEX[m_dwNumUV] : pvVB = new FBX_VERTEX[m_dwNumVert];
 	
@@ -400,7 +399,7 @@ void FBXMesh::RenderMesh(const ShunLib::Matrix& world, const ShunLib::Matrix& vi
 			sg.diffuse = m_material[i].Kd;                            //ディフューズカラーをシェーダーに渡す
 			sg.specular = m_material[i].Ks;                           //スペキュラーをシェーダーに渡す
 
-			sg.diffuse = ShunLib::Vec4(0.0f,0.0f,0.0f,1.0f);                            //ディフューズカラーをシェーダーに渡す
+			sg.diffuse = ShunLib::Vec4(1.0f,1.0f,1.0f,1.0f);                            //ディフューズカラーをシェーダーに渡す
 
 			memcpy_s(pData.pData, pData.RowPitch, (void*)&sg, sizeof(SHADER_GLOBAL1));
 			context->Unmap(m_constantBuffer, 0);
