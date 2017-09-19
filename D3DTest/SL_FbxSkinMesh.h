@@ -69,8 +69,8 @@ struct MY_VERTEX
 //ボーン構造体
 struct BONE
 {
-	fbxsdk::FbxMatrix bindPose;//初期ポーズ（ずっと変わらない）
-	fbxsdk::FbxMatrix newPose;//現在のポーズ（その都度変わる）
+	ShunLib::Matrix bindPose;//初期ポーズ（ずっと変わらない）
+	ShunLib::Matrix newPose;//現在のポーズ（その都度変わる）
 };
 
 //１頂点の共有　最大20ポリゴンまで
@@ -115,7 +115,7 @@ namespace ShunLib {
 		DWORD m_dwNumUV;
 		ID3D11Buffer* m_vertexBuffer;
 		ID3D11Buffer** m_ppIndexBuffer;
-		MY_MATERIAL* m_pMaterial;
+		MY_MATERIAL* m_material;
 		DWORD m_dwNumMaterial;
 		Matrix m_mFinalWorld;//最終的なワールド行列（この姿勢でレンダリングする）
 
