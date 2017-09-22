@@ -29,6 +29,7 @@ namespace ShunLib
 			SDEF,
 		};
 
+		//ボーンフラグ
 		enum BONE_FLAG
 		{
 			CONNECTED                      = 0x0001, //接続先
@@ -40,10 +41,24 @@ namespace ShunLib
 			LOCAL_GRANT                    = 0x0080, //ローカル付与
 			ROTATION_GRANT                 = 0x0100, //回転付与
 			MOVEMENT_GRANT                 = 0x0200, //移動付与
-			SHAFT_FIXING                   = 0x0400, //軸固定
+			LOCK_AXIS					   = 0x0400, //軸固定
 			LOCAL_AXIS                     = 0x0800, //ローカル軸
 			POST_PHYSICAL_DEFORMATION      = 0x1000, //物理後変形
 			EXTERNAL_PARENT_TRANSFORMATION = 0x2000, //外部親変形
+		};
+
+		//モーフの種類
+		enum MOTPH_TYPE
+		{
+			GROUP = 0,
+			VERTEX,
+			BONE,
+			UV,
+			ADD_UV1,
+			ADD_UV2,
+			ADD_UV3,
+			ADD_UV4,
+			MATERIAL,
 		};
 	}
 }

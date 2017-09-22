@@ -212,7 +212,7 @@ namespace ShunLib
 			PMXByte operationPanel;    // 操作パネル (PMD:カテゴリ) 1:眉(左下) 2:目(左上) 3:口(右上) 4:その他(右下)  | 0:システム予約
 			PMXByte type;              // モーフ種類 - 0:グループ, 1:頂点, 2:ボーン, 3:UV, 4:追加UV1, 5:追加UV2, 6:追加UV3, 7:追加UV4, 8:材質,  9:フリップ(※2.1拡張) 10:インパルス(※2.1拡張)
 			int morphOffsetCount;      // モーフのオフセット数 : 後続の要素数
-			void *morphOffsetList;     // モーフ種類に従ってオフセットデータを格納 ※異なる種類の混合は不可
+			void* morphOffsetList;     // モーフ種類に従ってオフセットデータを格納 ※異なる種類の混合は不可
 		};
 
 

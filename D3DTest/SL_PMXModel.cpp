@@ -1,10 +1,21 @@
 #include "SL_PMXModel.h"
 #include <Windows.h>
 #include <locale.h>
+#include <SL_MacroConstants.h>
 
 using namespace std;
 using namespace ShunLib;
 using namespace ShunLib::PMX;
+
+ShunLib::PMX::PMXModel::~PMXModel()
+{
+	//モーフのオフセットを削除
+	//MakeMorphOffsetにて生成
+	for (int i = 0; i < m_morph.count; i++)
+	{
+		SAFE_DELETE_ARRAY(m_morph.info[i].morphOffsetList);
+	}
+}
 
 /// <summary>
 /// PMXモデルを読み込む
@@ -334,9 +345,24 @@ bool PMXModel::LoadMorph(FILE * file)
 	fread_s(&m_morph.count, sizeof(int), sizeof(int), 1, file);
 	m_morph.info.resize(m_morph.count);
 
+	//モーフ情報読み込み
 	for (int i = 0; i < m_morph.count; i++)
 	{
+		//モーフ名　モーフ名(英語)
 		ReadName(&m_morph.info[i].morphName, file);
+		ReadName(&m_morph.info[i].morphNameE, file);
+	
+		//操作パネル
+		fread_s(&m_morph.info[i].operationPanel, sizeof(PMXByte), sizeof(PMXByte), 1, file);
+
+		//モーフ種類
+		fread_s(&m_morph.info[i].type, sizeof(PMXByte), sizeof(PMXByte), 1, file);
+
+		//モーフのオフセット数
+		fread_s(&m_morph.info[i].morphOffsetCount, sizeof(int), sizeof(int), 1, file);
+		
+		//モーフのオフセットを作成
+		MakeMorphOffset(&m_morph.info[i], m_morph.info[i].type, m_morph.info[i].morphOffsetCount, file);
 	}
 	return true;
 }
@@ -520,7 +546,7 @@ bool PMXModel::ReadBoneFlag(PmxBoneInfo * buf, unsigned short flag, FILE * file)
 	}
 
 	//固定軸
-	if ((flag & BONE_FLAG::SHAFT_FIXING))
+	if ((flag & BONE_FLAG::LOCK_AXIS))
 	{
 		fread_s(&buf->axisDirectionVector, sizeof(Vec3), sizeof(Vec3), 1, file);
 	}
@@ -533,7 +559,7 @@ bool PMXModel::ReadBoneFlag(PmxBoneInfo * buf, unsigned short flag, FILE * file)
 	}
 
 	//外部親変形
-	if ((flag & BONE_FLAG::SHAFT_FIXING))
+	if ((flag & BONE_FLAG::EXTERNAL_PARENT_TRANSFORMATION))
 	{
 		fread_s(&buf->keyValue, sizeof(int), sizeof(int), 1, file);
 	}
@@ -560,6 +586,169 @@ bool PMXModel::ReadBoneFlag(PmxBoneInfo * buf, unsigned short flag, FILE * file)
 				fread_s(&buf->ikLinkList[i].maximumRadian, sizeof(Vec3), sizeof(Vec3), 1, file);
 			}
 		}
+	}
+
+	return true;
+}
+
+
+
+/// <summary>
+/// モーフのオフセットに情報を読み込む
+/// </summary>
+/// <param name="buf">情報を入れるバッファー</param>
+/// <param name="count">作成数</param>
+/// <param name="file">読み込むファイル</param>
+bool PMXModel::ReadGroupMorphOffset(GroupMorphOffset* buf,int count, FILE * file)
+{
+	PMXByte morphIndexSize = m_header.data[HEADER_DATA_2_0::MORPH_INDEX];
+	for (int i = 0; i < count; i++)
+	{
+		fread_s(&buf[i].morphIndex, morphIndexSize, morphIndexSize, 1, file);
+		fread_s(&buf[i].morphRatio, sizeof(float), sizeof(float), 1, file);
+	}
+
+	return true;
+}
+
+/// <summary>
+/// モーフのオフセットに情報を読み込む
+/// </summary>
+/// <param name="buf">情報を入れるバッファー</param>
+/// <param name="count">作成数</param>
+/// <param name="file">読み込むファイル</param>
+bool ShunLib::PMX::PMXModel::ReadVertexMorphOffset(VertexMorphOffset * buf, int count, FILE * file)
+{
+	PMXByte vertexIndexSize = m_header.data[HEADER_DATA_2_0::VERTEX_INDEX];
+	for (int i = 0; i < count; i++)
+	{
+		fread_s(&buf[i].vertexIndex, vertexIndexSize, vertexIndexSize, 1, file);
+		fread_s(&buf[i].positionOffset, sizeof(Vec3), sizeof(Vec3), 1, file);
+	}
+	return true;
+}
+
+/// <summary>
+/// モーフのオフセットに情報を読み込む
+/// </summary>
+/// <param name="buf">情報を入れるバッファー</param>
+/// <param name="count">作成数</param>
+/// <param name="file">読み込むファイル</param>
+bool ShunLib::PMX::PMXModel::ReadBoneMorphOffset(BoneMoptOffset * buf, int count, FILE * file)
+{
+	PMXByte boneIndexSize = m_header.data[HEADER_DATA_2_0::BONE_INDEX];
+	for (int i = 0; i < count; i++)
+	{
+		fread_s(&buf[i].boneIndex, boneIndexSize, boneIndexSize, 1, file);
+		fread_s(&buf[i].quantityOfMoving, sizeof(Vec3), sizeof(Vec3), 1, file);
+		fread_s(&buf[i].quantityOfRotating, sizeof(Vec4), sizeof(Vec4), 1, file);
+	}
+	return true;
+}
+
+/// <summary>
+/// モーフのオフセットに情報を読み込む
+/// </summary>
+/// <param name="buf">情報を入れるバッファー</param>
+/// <param name="count">作成数</param>
+/// <param name="file">読み込むファイル</param>
+bool ShunLib::PMX::PMXModel::ReadUVMorphOffset(UVMorphOffset * buf, int count, FILE * file)
+{
+	PMXByte vertexIndexSize = m_header.data[HEADER_DATA_2_0::VERTEX_INDEX];
+	for (int i = 0; i < count; i++)
+	{
+		fread_s(&buf[i].vertexIndex, vertexIndexSize, vertexIndexSize, 1, file);
+		fread_s(&buf[i].uvOffset, sizeof(Vec4), sizeof(Vec4), 1, file);
+	}
+	return true;
+}
+
+/// <summary>
+/// モーフのオフセットに情報を読み込む
+/// </summary>
+/// <param name="buf">情報を入れるバッファー</param>
+/// <param name="count">作成数</param>
+/// <param name="file">読み込むファイル</param>
+bool ShunLib::PMX::PMXModel::ReadMaterialMorphOffset(MaterialMorphOffset * buf, int count, FILE * file)
+{
+	PMXByte materialIndexSize = m_header.data[HEADER_DATA_2_0::MATERIAL_INDEX];
+	for (int i = 0; i < count; i++)
+	{
+		fread_s(&buf[i].materialIndex, materialIndexSize, materialIndexSize, 1, file);
+		fread_s(&buf[i].offsetCalclationType, sizeof(PMXByte), sizeof(PMXByte), 1, file);
+		fread_s(&buf[i].diffuse, sizeof(Vec4), sizeof(Vec4), 1, file);
+		fread_s(&buf[i].specular, sizeof(Vec3), sizeof(Vec3), 1, file);
+		fread_s(&buf[i].specularCoefficient, sizeof(float), sizeof(float), 1, file);
+		fread_s(&buf[i].ambient, sizeof(Vec3), sizeof(Vec3), 1, file);
+		fread_s(&buf[i].edgeColor, sizeof(Vec4), sizeof(Vec4), 1, file);
+		fread_s(&buf[i].edgeSize, sizeof(float), sizeof(float), 1, file);
+		fread_s(&buf[i].textureCoefficient, sizeof(Vec4), sizeof(Vec4), 1, file);
+		fread_s(&buf[i].sphereTextureCoefficient, sizeof(Vec4), sizeof(Vec4), 1, file);
+		fread_s(&buf[i].toonTextureCoefficient, sizeof(Vec4), sizeof(Vec4), 1, file);
+	}
+	return true;
+}
+
+
+/// <summary>
+/// モーフのオフセットを作成
+/// ※動的に確保するためdeleteが必要
+/// </summary>
+/// <param name="buf">情報を入れるバッファー</param>
+/// <param name="type">モーフの種類</param>
+/// <param name="count">作成数</param>
+/// <param name="file">読み込むファイル</param>
+bool PMXModel::MakeMorphOffset(PMXMorphInfo* buf, PMXByte type, int count, FILE * file)
+{
+	switch (type)
+	{
+	case GROUP:
+		buf->morphOffsetList = new GroupMorphOffset[count];
+		ReadGroupMorphOffset(static_cast<GroupMorphOffset*>(buf->morphOffsetList), count, file);
+		break;
+
+	case VERTEX:
+		buf->morphOffsetList = new VertexMorphOffset[count];
+		ReadVertexMorphOffset(static_cast<VertexMorphOffset*>(buf->morphOffsetList), count, file);
+		break;
+
+	case BONE:
+		buf->morphOffsetList = new BoneMoptOffset[count];
+		ReadBoneMorphOffset(static_cast<BoneMoptOffset*>(buf->morphOffsetList), count, file);
+		break;
+
+	case UV:
+		buf->morphOffsetList = new UVMorphOffset[count];
+		ReadUVMorphOffset(static_cast<UVMorphOffset*>(buf->morphOffsetList), count, file);
+		break;
+
+	case ADD_UV1:
+		buf->morphOffsetList = new UVMorphOffset[count];
+		ReadUVMorphOffset(static_cast<UVMorphOffset*>(buf->morphOffsetList), count, file);
+		break;
+
+	case ADD_UV2:
+		buf->morphOffsetList = new UVMorphOffset[count];
+		ReadUVMorphOffset(static_cast<UVMorphOffset*>(buf->morphOffsetList), count, file);
+		break;
+
+	case ADD_UV3:
+		buf->morphOffsetList = new UVMorphOffset[count];
+		ReadUVMorphOffset(static_cast<UVMorphOffset*>(buf->morphOffsetList), count, file);
+		break;
+
+	case ADD_UV4:
+		buf->morphOffsetList = new UVMorphOffset[count];
+		ReadUVMorphOffset(static_cast<UVMorphOffset*>(buf->morphOffsetList), count, file);
+		break;
+
+	case MATERIAL:
+		buf->morphOffsetList = new MaterialMorphOffset[count];
+		ReadMaterialMorphOffset(static_cast<MaterialMorphOffset*>(buf->morphOffsetList), count, file);
+		break;
+
+	default:
+		return false;
 	}
 
 	return true;
