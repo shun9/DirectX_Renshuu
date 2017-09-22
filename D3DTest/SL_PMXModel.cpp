@@ -428,9 +428,12 @@ bool PMXModel::LoadRigidBody(FILE * file)
 	{
 		return false;
 	}
+
 	// 剛体数
 	fread_s(&m_rigidBody.count, sizeof(int), sizeof(int), 1, file);
 	m_rigidBody.info.resize(m_rigidBody.count);
+
+	PMXByte boneIndexSize = m_header.data[HEADER_DATA_2_0::BONE_INDEX];
 
 	//表示枠情報読み込み
 	for (int i = 0; i < m_rigidBody.count; i++)
@@ -438,6 +441,37 @@ bool PMXModel::LoadRigidBody(FILE * file)
 		//表示枠名　表示枠名(英語)
 		ReadName(&m_rigidBody.info[i].rigidBodyName, file);
 		ReadName(&m_rigidBody.info[i].rigidBodyNameE, file);
+
+		//関連ボーンIndex
+		fread_s(&m_rigidBody.info[i].boneIndex, boneIndexSize, boneIndexSize, 1, file);
+
+		//グループ
+		fread_s(&m_rigidBody.info[i].group, sizeof(PMXByte), sizeof(PMXByte), 1, file);
+		
+		//非衝突グループフラグ
+		fread_s(&m_rigidBody.info[i].unCollisionGroupFlag, sizeof(unsigned short), sizeof(unsigned short), 1, file);
+		
+		//形状
+		fread_s(&m_rigidBody.info[i].shape, sizeof(PMXByte), sizeof(PMXByte), 1, file);
+		
+		//サイズ
+		fread_s(&m_rigidBody.info[i].size, sizeof(Vec3), sizeof(Vec3), 1, file);
+
+		//位置
+		fread_s(&m_rigidBody.info[i].position, sizeof(Vec3), sizeof(Vec3), 1, file);
+		
+		//回転
+		fread_s(&m_rigidBody.info[i].rotation, sizeof(Vec3), sizeof(Vec3), 1, file);
+		
+		//質量  移動減衰  回転減衰  反発力  摩擦力
+		fread_s(&m_rigidBody.info[i].mass, sizeof(float), sizeof(float), 1, file);
+		fread_s(&m_rigidBody.info[i].moveAttenuation, sizeof(float), sizeof(float), 1, file);
+		fread_s(&m_rigidBody.info[i].rotationAttenuation, sizeof(float), sizeof(float), 1, file);
+		fread_s(&m_rigidBody.info[i].repulsion, sizeof(float), sizeof(float), 1, file);
+		fread_s(&m_rigidBody.info[i].friction, sizeof(float), sizeof(float), 1, file);
+		
+		//物理演算
+		fread_s(&m_rigidBody.info[i].physicsCalcType, sizeof(PMXByte), sizeof(PMXByte), 1, file);
 	}
 	return true;
 }
@@ -452,6 +486,18 @@ bool PMXModel::LoadJoint(FILE * file)
 	if (file == NULL)
 	{
 		return false;
+	}
+
+	// 表示枠数
+	fread_s(&m_joint.count, sizeof(int), sizeof(int), 1, file);
+	m_joint.info.resize(m_joint.count);
+
+	//表示枠情報読み込み
+	for (int i = 0; i < m_joint.count; i++)
+	{
+		//表示枠名　表示枠名(英語)
+		ReadName(&m_joint.info[i].jointName, file);
+		ReadName(&m_joint.info[i].jointNameE, file);
 	}
 	return true;
 }

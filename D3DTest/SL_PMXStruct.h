@@ -237,9 +237,9 @@ namespace ShunLib
 		struct PMXRigidBodyInfo
 		{
 			PMXTextBuf rigidBodyName;            // 剛体名
-			PMXTextBuf rigidBodyNameE;          // 剛体名（英語）
+			PMXTextBuf rigidBodyNameE;           // 剛体名（英語）
 			int boneIndex;                       // 関連ボーンIndex - 関連なしの場合は-1
-			PMXByte rigidBodyGroup;              // グループ
+			PMXByte group;					     // グループ
 			unsigned short unCollisionGroupFlag; // 非衝突グループフラグ
 			PMXByte shape;                       // 形状 - 0:球 1:箱 2:カプセル
 			Vec3 size;                           // サイズ(x,y,z)
