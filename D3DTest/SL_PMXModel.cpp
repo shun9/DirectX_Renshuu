@@ -378,6 +378,42 @@ bool PMXModel::LoadDisplayFrame(FILE * file)
 	{
 		return false;
 	}
+
+	// ï\é¶ògêî
+	fread_s(&m_displayframe.count, sizeof(int), sizeof(int), 1, file);
+	m_displayframe.info.resize(m_displayframe.count);
+
+	//ï\é¶ògèÓïÒì«Ç›çûÇ›
+	for (int i = 0; i < m_displayframe.count; i++)
+	{
+		//ï\é¶ògñºÅ@ï\é¶ògñº(âpåÍ)
+		ReadName(&m_displayframe.info[i].frameName, file);
+		ReadName(&m_displayframe.info[i].frameNameE, file);
+
+		//ì¡éÍògÉtÉâÉO
+		fread_s(&m_displayframe.info[i].isSpecialFrame, sizeof(PMXByte), sizeof(PMXByte), 1, file);
+
+		//ògì‡óvëfêî
+		fread_s(&m_displayframe.info[i].elementCount, sizeof(int), sizeof(int), 1, file);
+		m_displayframe.info[i].frameElementList.resize(m_displayframe.info[i].elementCount);
+
+		//ògì‡óvëf
+		for (int j = 0; j < m_displayframe.info[i].elementCount; j++)
+		{
+			//óvëfëŒè€
+			fread_s(&m_displayframe.info[i].frameElementList[j].isMorph, sizeof(PMXByte), sizeof(PMXByte), 1, file);
+			if (m_displayframe.info[i].frameElementList[j].isMorph == FLAME_TARGET::TERGET_MORPH){
+				//ÉÇÅ[Ét
+				PMXByte morphIndexSize = m_header.data[HEADER_DATA_2_0::MORPH_INDEX];
+				fread_s(&m_displayframe.info[i].frameElementList[j].index, morphIndexSize, morphIndexSize, 1, file);
+			}
+			else {
+				//É{Å[Éì
+				PMXByte boneIndexSize = m_header.data[HEADER_DATA_2_0::BONE_INDEX];
+				fread_s(&m_displayframe.info[i].frameElementList[j].index, boneIndexSize, boneIndexSize, 1, file);
+			}
+		}
+	}
 	return true;
 }
 
@@ -391,6 +427,17 @@ bool PMXModel::LoadRigidBody(FILE * file)
 	if (file == NULL)
 	{
 		return false;
+	}
+	// çÑëÃêî
+	fread_s(&m_rigidBody.count, sizeof(int), sizeof(int), 1, file);
+	m_rigidBody.info.resize(m_rigidBody.count);
+
+	//ï\é¶ògèÓïÒì«Ç›çûÇ›
+	for (int i = 0; i < m_rigidBody.count; i++)
+	{
+		//ï\é¶ògñºÅ@ï\é¶ògñº(âpåÍ)
+		ReadName(&m_rigidBody.info[i].rigidBodyName, file);
+		ReadName(&m_rigidBody.info[i].rigidBodyNameE, file);
 	}
 	return true;
 }
@@ -702,47 +749,47 @@ bool PMXModel::MakeMorphOffset(PMXMorphInfo* buf, PMXByte type, int count, FILE 
 {
 	switch (type)
 	{
-	case GROUP:
+	case MOTPH_TYPE::GROUP:
 		buf->morphOffsetList = new GroupMorphOffset[count];
 		ReadGroupMorphOffset(static_cast<GroupMorphOffset*>(buf->morphOffsetList), count, file);
 		break;
 
-	case VERTEX:
+	case MOTPH_TYPE::VERTEX:
 		buf->morphOffsetList = new VertexMorphOffset[count];
 		ReadVertexMorphOffset(static_cast<VertexMorphOffset*>(buf->morphOffsetList), count, file);
 		break;
 
-	case BONE:
+	case MOTPH_TYPE::BONE:
 		buf->morphOffsetList = new BoneMoptOffset[count];
 		ReadBoneMorphOffset(static_cast<BoneMoptOffset*>(buf->morphOffsetList), count, file);
 		break;
 
-	case UV:
+	case MOTPH_TYPE::UV:
 		buf->morphOffsetList = new UVMorphOffset[count];
 		ReadUVMorphOffset(static_cast<UVMorphOffset*>(buf->morphOffsetList), count, file);
 		break;
 
-	case ADD_UV1:
+	case MOTPH_TYPE::ADD_UV1:
 		buf->morphOffsetList = new UVMorphOffset[count];
 		ReadUVMorphOffset(static_cast<UVMorphOffset*>(buf->morphOffsetList), count, file);
 		break;
 
-	case ADD_UV2:
+	case MOTPH_TYPE::ADD_UV2:
 		buf->morphOffsetList = new UVMorphOffset[count];
 		ReadUVMorphOffset(static_cast<UVMorphOffset*>(buf->morphOffsetList), count, file);
 		break;
 
-	case ADD_UV3:
+	case MOTPH_TYPE::ADD_UV3:
 		buf->morphOffsetList = new UVMorphOffset[count];
 		ReadUVMorphOffset(static_cast<UVMorphOffset*>(buf->morphOffsetList), count, file);
 		break;
 
-	case ADD_UV4:
+	case MOTPH_TYPE::ADD_UV4:
 		buf->morphOffsetList = new UVMorphOffset[count];
 		ReadUVMorphOffset(static_cast<UVMorphOffset*>(buf->morphOffsetList), count, file);
 		break;
 
-	case MATERIAL:
+	case MOTPH_TYPE::MATERIAL:
 		buf->morphOffsetList = new MaterialMorphOffset[count];
 		ReadMaterialMorphOffset(static_cast<MaterialMorphOffset*>(buf->morphOffsetList), count, file);
 		break;

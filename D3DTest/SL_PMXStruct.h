@@ -226,11 +226,11 @@ namespace ShunLib
 		// •\¦˜g
 		struct PMXDisplayFrameInfo
 		{
-			PMXTextBuf frameName;              // ˜g–¼
-			PMXTextBuf frameNameE;            // ˜g–¼i‰pŒêj
-			PMXByte isSpecialFrame;            // “Áê˜gƒtƒ‰ƒO - 0:’Êí˜g 1:“Áê˜g
-			int elementCount;		           // ˜g“à—v‘f” : Œã‘±‚Ì—v‘f”
-			PMXFrameElement *frameElementList; // ˜g“à—v‘fƒŠƒXƒg
+			PMXTextBuf frameName;                          // ˜g–¼
+			PMXTextBuf frameNameE;                         // ˜g–¼i‰pŒêj
+			PMXByte isSpecialFrame;                        // “Áê˜gƒtƒ‰ƒO - 0:’Êí˜g 1:“Áê˜g
+			int elementCount;		                       // ˜g“à—v‘f” : Œã‘±‚Ì—v‘f”
+			std::vector<PMXFrameElement> frameElementList; // ˜g“à—v‘fƒŠƒXƒg
 		};
 
 		// „‘Ì

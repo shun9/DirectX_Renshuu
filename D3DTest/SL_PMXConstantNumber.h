@@ -60,5 +60,12 @@ namespace ShunLib
 			ADD_UV4,
 			MATERIAL,
 		};
+
+		//ògì‡óvëfÇÃëŒè€
+		enum FLAME_TARGET
+		{
+			TERGET_BONE  = 0,
+			TERGET_MORPH = 1,
+		};
 	}
 }
