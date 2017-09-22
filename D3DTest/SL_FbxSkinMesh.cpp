@@ -9,18 +9,12 @@
 
 using namespace std;
 using namespace ShunLib;
-//
-//FBX_SKINMESH::FBX_SKINMESH()
-//コンストラクター
+
 FbxSkinMesh::FbxSkinMesh()
 {
 	ZeroMemory(this, sizeof(FbxSkinMesh));
-	m_fScale = 1.0f;
 }
 
-//
-//FBX_SKINMESH::~FBX_SKINMESH()
-//デストラクター
 FbxSkinMesh::~FbxSkinMesh()
 {
 	delete[] m_bone;
@@ -32,11 +26,9 @@ FbxSkinMesh::~FbxSkinMesh()
 		SAFE_RELEASE(m_ppIndexBuffer[i]);
 	}
 	delete[] m_ppIndexBuffer;
-	if (m_pSdkManager) m_pSdkManager->Destroy();
 }
-//
-//
-//
+
+
 HRESULT FbxSkinMesh::Init(LPSTR FileName)
 {
 	if (FAILED(InitShader()))
@@ -58,24 +50,18 @@ HRESULT FbxSkinMesh::Init(LPSTR FileName)
 	SamDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
 	SamDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
 
-	Window::GetInstance()->Device()->CreateSamplerState(&SamDesc, &m_pSampleLinear);
+	Window::GetInstance()->Device()->CreateSamplerState(&SamDesc, &m_sampleLinear);
 
 	return S_OK;
 }
-//
-//
-//
+
+/// <summary>
+/// シェーダー作成
+/// </summary>
 HRESULT FbxSkinMesh::InitShader()
 {
 	auto graphic = Graphics::GetInstance();
 	auto device = Window::GetInstance()->Device();
-
-	//バーテックスシェーダー作成
-	if (FAILED(graphic->CreateVertexShader(L"SKIN_MESH.hlsl", "VSSkin", "vs_5_0", &m_vertexShader)))
-	{
-		MessageBox(0, L"バーテックスシェーダー作成失敗", NULL, MB_OK);
-		return E_FAIL;
-	}
 
 	//頂点インプットレイアウトを定義	
 	D3D11_INPUT_ELEMENT_DESC layout[] =
@@ -88,15 +74,12 @@ HRESULT FbxSkinMesh::InitShader()
 	};
 	UINT numElements = sizeof(layout) / sizeof(layout[0]);
 
-
-
-	//頂点インプットレイアウト作成
-	if (FAILED(graphic->CreateInputLayout(layout, numElements, &m_vertexLayout)))
+	//バーテックスシェーダー作成
+	if (FAILED(graphic->CreateVertexShader(L"SKIN_MESH.hlsl", "VSSkin", "vs_5_0", &m_vertexShader, layout, numElements, &m_vertexLayout)))
 	{
-		MessageBox(0, L"頂点インプットレイアウト作成失敗", NULL, MB_OK);
+		MessageBox(0, L"バーテックスシェーダー作成失敗", NULL, MB_OK);
 		return E_FAIL;
 	}
-
 	//ピクセルシェーダー作成
 	if (FAILED(graphic->CreatePixleShader(L"SKIN_MESH.hlsl", "PSSkin", "ps_5_0", &m_pixelShader)))
 	{
@@ -112,7 +95,7 @@ HRESULT FbxSkinMesh::InitShader()
 	cb.MiscFlags = 0;
 	cb.Usage = D3D11_USAGE_DYNAMIC;
 
-	if (FAILED(device->CreateBuffer(&cb, NULL, &m_pConstantBuffer0)))
+	if (FAILED(device->CreateBuffer(&cb, NULL, &m_constantBuffer0)))
 	{
 		return E_FAIL;
 	}
@@ -124,7 +107,7 @@ HRESULT FbxSkinMesh::InitShader()
 	cb.MiscFlags = 0;
 	cb.Usage = D3D11_USAGE_DYNAMIC;
 
-	if (FAILED(device->CreateBuffer(&cb, NULL, &m_pConstantBuffer1)))
+	if (FAILED(device->CreateBuffer(&cb, NULL, &m_constantBuffer1)))
 	{
 		return E_FAIL;
 	}
@@ -136,28 +119,28 @@ HRESULT FbxSkinMesh::InitShader()
 	cb.MiscFlags = 0;
 	cb.Usage = D3D11_USAGE_DYNAMIC;
 
-	if (FAILED(device->CreateBuffer(&cb, NULL, &m_pConstantBufferBone)))
+	if (FAILED(device->CreateBuffer(&cb, NULL, &m_constantBufferBone)))
 	{
 		return E_FAIL;
 	}
 
 	return S_OK;
 }
-//
+
+
 //HRESULT InitFBX(CHAR* szFileName)
 //指定したファイルのFBXを初期化する
 HRESULT FbxSkinMesh::InitFBX(CHAR* szFileName)
 {
-	m_pSdkManager = FbxManager::Create();
-
-	m_pImporter = FbxImporter::Create(m_pSdkManager, "my importer");
+	auto graphic = Graphics::GetInstance();
+	m_importer = FbxImporter::Create(graphic->FBXManager(), "my importer");
 
 	int iFormat = -1;
-	m_pImporter->Initialize((const char*)szFileName, iFormat);
+	m_importer->Initialize((const char*)szFileName, iFormat);
 
-	m_pmyScene = FbxScene::Create(m_pSdkManager, "my scene");
+	m_scene = FbxScene::Create(graphic->FBXManager(), "my scene");
 
-	m_pImporter->Import(m_pmyScene);
+	m_importer->Import(m_scene);
 
 	return S_OK;
 }
@@ -201,7 +184,7 @@ HRESULT FbxSkinMesh::ReadSkinInfo(FbxMesh* pFbxMesh, MY_VERTEX* pvVB, POLY_TABLE
 					if (pdWeight[k] > pvVB[piIndex[k]].bBoneWeight[m])
 					{
 						pvVB[piIndex[k]].bBoneIndex[m] = i;
-						pvVB[piIndex[k]].bBoneWeight[m] = pdWeight[k];
+						pvVB[piIndex[k]].bBoneWeight[m] = (float)(pdWeight[k]);
 						break;
 					}
 				}
@@ -234,7 +217,7 @@ HRESULT FbxSkinMesh::ReadSkinInfo(FbxMesh* pFbxMesh, MY_VERTEX* pvVB, POLY_TABLE
 						if (pdWeight[k] > pvVB[UVIndex].bBoneWeight[m])
 						{
 							pvVB[UVIndex].bBoneIndex[m] = i;
-							pvVB[UVIndex].bBoneWeight[m] = pdWeight[k];
+							pvVB[UVIndex].bBoneWeight[m] = (float)(pdWeight[k]);
 							break;
 						}
 					}
@@ -258,8 +241,8 @@ HRESULT FbxSkinMesh::ReadSkinInfo(FbxMesh* pFbxMesh, MY_VERTEX* pvVB, POLY_TABLE
 		{
 			for (int y = 0; y < 4; y++)
 			{
-				m_bone[i].bindPose.m_value[y][x] = mat.Get(y, x);
-				m_bone[i].bindPose.m_value[0][0] *= -1;
+				m_bone[i].bindPose.m_value[y][x] = (float)(mat.Get(y, x));
+				m_bone[i].bindPose.m_value[0][0] *= -1.0f;
 			}
 		}
 	}
@@ -281,7 +264,7 @@ HRESULT FbxSkinMesh::CreateFromFBX(CHAR* szFileName)
 		return E_FAIL;
 	}
 
-	FbxNode* pNode = m_pmyScene->GetRootNode();
+	FbxNode* pNode = m_scene->GetRootNode();
 
 	int index = 0;
 	FbxNodeAttribute* pAttr = pNode->GetNodeAttribute();
@@ -301,7 +284,14 @@ HRESULT FbxSkinMesh::CreateFromFBX(CHAR* szFileName)
 	//一時的なメモリ確保（頂点バッファとインデックスバッファ）
 	MY_VERTEX* pvVB = NULL;
 	m_dwNumVert < m_dwNumUV ? pvVB = new MY_VERTEX[m_dwNumUV] : pvVB = new MY_VERTEX[m_dwNumVert];
+
 	////ポリゴンごとに　頂点読み込み 、法線読み込み、UV読み込み
+	auto SetIndexOrNormal = [](Vec3* set, FbxDouble* get)
+	{
+		set->m_x = -(float)get[0];
+		set->m_y = (float)get[1];
+		set->m_z = (float)get[2];
+	};
 	FbxVector4 Normal;
 	for (DWORD i = 0; i < m_dwNumFace; i++)
 	{
@@ -321,40 +311,29 @@ HRESULT FbxSkinMesh::CreateFromFBX(CHAR* szFileName)
 			iIndex1 = pFbxMesh->GetTextureUVIndex(i, 1, FbxLayerElement::eTextureDiffuse);
 			iIndex2 = pFbxMesh->GetTextureUVIndex(i, 2, FbxLayerElement::eTextureDiffuse);
 		}
+
 		//頂点
 		int index = pFbxMesh->GetPolygonVertex(i, 0);
 		FbxVector4 Coord = pFbxMesh->GetControlPointAt(index);
-		pvVB[iIndex0].pos.m_x = -Coord.mData[0];
-		pvVB[iIndex0].pos.m_y = Coord.mData[1];
-		pvVB[iIndex0].pos.m_z = Coord.mData[2];
+		SetIndexOrNormal(&(pvVB[iIndex0].pos), Coord.mData);
 
 		index = pFbxMesh->GetPolygonVertex(i, 1);
 		Coord = pFbxMesh->GetControlPointAt(index);
-		pvVB[iIndex1].pos.m_x = -Coord.mData[0];
-		pvVB[iIndex1].pos.m_y = Coord.mData[1];
-		pvVB[iIndex1].pos.m_z = Coord.mData[2];
+		SetIndexOrNormal(&(pvVB[iIndex1].pos), Coord.mData); 
 
 		index = pFbxMesh->GetPolygonVertex(i, 2);
 		Coord = pFbxMesh->GetControlPointAt(index);
-		pvVB[iIndex2].pos.m_x = -Coord.mData[0];
-		pvVB[iIndex2].pos.m_y = Coord.mData[1];
-		pvVB[iIndex2].pos.m_z = Coord.mData[2];
+		SetIndexOrNormal(&(pvVB[iIndex2].pos), Coord.mData); 
 
 		//法線		
 		pFbxMesh->GetPolygonVertexNormal(i, 0, Normal);
-		pvVB[iIndex0].norm.m_x = -Normal[0];
-		pvVB[iIndex0].norm.m_y = Normal[1];
-		pvVB[iIndex0].norm.m_z = Normal[2];
+		SetIndexOrNormal(&(pvVB[iIndex0].pos), Normal);
 
 		pFbxMesh->GetPolygonVertexNormal(i, 1, Normal);
-		pvVB[iIndex1].norm.m_x = -Normal[0];
-		pvVB[iIndex1].norm.m_y = Normal[1];
-		pvVB[iIndex1].norm.m_z = Normal[2];
+		SetIndexOrNormal(&(pvVB[iIndex1].pos), Normal);
 
 		pFbxMesh->GetPolygonVertexNormal(i, 2, Normal);
-		pvVB[iIndex2].norm.m_x = -Normal[0];
-		pvVB[iIndex2].norm.m_y = Normal[1];
-		pvVB[iIndex2].norm.m_z = Normal[2];
+		SetIndexOrNormal(&(pvVB[iIndex2].pos), Normal);
 
 		//テクスチャー座標
 		int UVindex = pFbxMesh->GetTextureUVIndex(i, 0, FbxLayerElement::eTextureDiffuse);
@@ -368,18 +347,18 @@ HRESULT FbxSkinMesh::CreateFromFBX(CHAR* szFileName)
 			UVindex = pFbxMesh->GetTextureUVIndex(i, 0, FbxLayerElement::eTextureDiffuse);
 			pUV = pFbxMesh->GetLayer(0)->GetUVs();
 			FbxVector2 v2 = pUV->GetDirectArray().GetAt(UVindex);
-			pvVB[iIndex0].tex.m_x = v2.mData[0];
-			pvVB[iIndex0].tex.m_y = 1.0f - v2.mData[1];
+			pvVB[iIndex0].tex.m_x = (float)(v2.mData[0]);
+			pvVB[iIndex0].tex.m_y = 1.0f - (float)(v2.mData[1]);
 
 			UVindex = pFbxMesh->GetTextureUVIndex(i, 1, FbxLayerElement::eTextureDiffuse);
 			v2 = pUV->GetDirectArray().GetAt(UVindex);
-			pvVB[iIndex1].tex.m_x = v2.mData[0];
-			pvVB[iIndex1].tex.m_y = 1.0f - v2.mData[1];
+			pvVB[iIndex1].tex.m_x = (float)(v2.mData[0]);
+			pvVB[iIndex1].tex.m_y = 1.0f - (float)(v2.mData[1]);
 
 			UVindex = pFbxMesh->GetTextureUVIndex(i, 2, FbxLayerElement::eTextureDiffuse);
 			v2 = pUV->GetDirectArray().GetAt(UVindex);
-			pvVB[iIndex2].tex.m_x = v2.mData[0];
-			pvVB[iIndex2].tex.m_y = 1.0f - v2.mData[1];
+			pvVB[iIndex2].tex.m_x = (float)(v2.mData[0]);
+			pvVB[iIndex2].tex.m_y = 1.0f - (float)(v2.mData[1]);
 		}
 	}
 
@@ -391,8 +370,8 @@ HRESULT FbxSkinMesh::CreateFromFBX(CHAR* szFileName)
 		{
 			FbxVector2 v2;
 			v2 = pUV->GetDirectArray().GetAt(k);
-			pvVB[k].tex.m_x = v2.mData[0];
-			pvVB[k].tex.m_y = 1.0f - v2.mData[1];
+			pvVB[k].tex.m_x = (float)(v2.mData[0]);
+			pvVB[k].tex.m_y = 1.0f - (float)(v2.mData[1]);
 		}
 	}
 
@@ -420,23 +399,23 @@ HRESULT FbxSkinMesh::CreateFromFBX(CHAR* szFileName)
 		FbxSurfacePhong* pPhong = (FbxSurfacePhong*)pMaterial;
 
 		//環境光
-		FbxDouble3 d3Ambient = pPhong->Ambient;
+		fbxsdk::FbxDouble3 d3Ambient = pPhong->Ambient;
 		auto a = d3Ambient.mData;
 		SetMaterial(&m_material[i].Ka, a);
 
 		//拡散反射光
-		FbxDouble3 d3Diffuse = pPhong->Diffuse;
+		fbxsdk::FbxDouble3 d3Diffuse = pPhong->Diffuse;
 		auto d = d3Diffuse.mData;
 		SetMaterial(&m_material[i].Kd, d);
 
 
 		//鏡面反射光
-		FbxDouble3 d3Specular = pPhong->Specular;
+		fbxsdk::FbxDouble3 d3Specular = pPhong->Specular;
 		auto s = d3Specular.mData;
 		SetMaterial(&m_material[i].Ks, s);
 
 		//テクスチャー（ディフューズテクスチャーのみ）
-		FbxProperty lProperty;
+		fbxsdk::FbxProperty lProperty;
 		lProperty = pMaterial->FindProperty(FbxSurfaceMaterial::sDiffuse);
 		FbxTexture* texture = FbxCast<FbxTexture>(lProperty.GetSrcObject(0));
 
@@ -458,9 +437,7 @@ HRESULT FbxSkinMesh::CreateFromFBX(CHAR* szFileName)
 				return E_FAIL;
 			}
 
-			//strcpy_s(m_pMaterial[i].szTextureName,texture->GetName());
 			//テクスチャーを作成
-			//if(FAILED(D3DX11CreateShaderResourceViewFromFileA(device, m_pMaterial[i].szTextureName, NULL, NULL, &m_pMaterial[i].pTexture, NULL )))//絶対パスファイル名は、まず失敗すると思うが、、、
 			if (FAILED(graphic->CreateShaderResourceView(wStrW, &m_material[i].pTexture)))
 			{
 				//ファイル名+拡張子のみにする
@@ -562,7 +539,7 @@ HRESULT FbxSkinMesh::CreateFromFBX(CHAR* szFileName)
 
 	return S_OK;
 }
-//
+
 //HRESULT FBX_SKINMESH::CreateIndexBuffer(DWORD dwSize,int* pIndex,ID3D11Buffer** ppIndexBuffer)
 //Direct3Dのインデックスバッファー作成
 HRESULT FbxSkinMesh::CreateIndexBuffer(DWORD dwSize, int* pIndex, ID3D11Buffer** ppIndexBuffer)
@@ -586,7 +563,8 @@ HRESULT FbxSkinMesh::CreateIndexBuffer(DWORD dwSize, int* pIndex, ID3D11Buffer**
 
 	return S_OK;
 }
-//
+
+
 //void FBX_SKINMESH::SetNewPoseMatrices(int frame)
 //ボーンを次のポーズ位置にセットする
 void FbxSkinMesh::SetNewPoseMatrices(int frame)
@@ -606,7 +584,7 @@ void FbxSkinMesh::SetNewPoseMatrices(int frame)
 		{
 			for (int y = 0; y < 4; y++)
 			{
-				m_bone[i].newPose.m_value[y][x] = mat.Get(y, x);
+				m_bone[i].newPose.m_value[y][x] = (float)(mat.Get(y, x));
 			}
 		}
 		m_bone[i].newPose = m * m_bone[i].newPose;//FBX右手座標系なのでｘが逆　補正する	
@@ -616,7 +594,7 @@ void FbxSkinMesh::SetNewPoseMatrices(int frame)
 	//フレームを進めたことにより変化したポーズ（ボーンの行列）をシェーダーに渡す
 	auto context = Window::GetInstance()->DeviceContext();
 	D3D11_MAPPED_SUBRESOURCE pData;
-	if (SUCCEEDED(context->Map(m_pConstantBufferBone, 0, D3D11_MAP_WRITE_DISCARD, 0, &pData)))
+	if (SUCCEEDED(context->Map(m_constantBufferBone, 0, D3D11_MAP_WRITE_DISCARD, 0, &pData)))
 	{
 		SHADER_GLOBAL_BONES sg;
 		for (int i = 0; i < m_iNumBone; i++)
@@ -626,12 +604,12 @@ void FbxSkinMesh::SetNewPoseMatrices(int frame)
 			sg.mBone[i] = mat;
 		}
 		memcpy_s(pData.pData, pData.RowPitch, (void*)&sg, sizeof(SHADER_GLOBAL_BONES));
-		context->Unmap(m_pConstantBufferBone, 0);
+		context->Unmap(m_constantBufferBone, 0);
 	}
-	context->VSSetConstantBuffers(2, 1, &m_pConstantBufferBone);
-	context->PSSetConstantBuffers(2, 1, &m_pConstantBufferBone);
+	context->VSSetConstantBuffers(2, 1, &m_constantBufferBone);
+	context->PSSetConstantBuffers(2, 1, &m_constantBufferBone);
 }
-//
+
 //D3DXMATRIX FBX_SKINMESH::GetCurrentPoseMatrix(int index)
 //次の（現在の）ポーズ行列を返す
 Matrix FbxSkinMesh::GetCurrentPoseMatrix(int index)
@@ -642,39 +620,18 @@ Matrix FbxSkinMesh::GetCurrentPoseMatrix(int index)
 
 	return ret;
 }
-//
-//
+
+
+
 //レンダリング
-void FbxSkinMesh::Render(const Matrix& mView, const Matrix& mProj,
+void FbxSkinMesh::Render(const Matrix& world, const Matrix& view, const Matrix& proj,
 	const Vec3& vLight, const Vec3& vEye)
 {
-	Matrix world, trans, yaw, pitch, roll, scale;
-	m_mView = mView;
-	m_mProj = mProj;
-
-	//ワールドトランスフォーム（絶対座標変換）
-	scale = Matrix::CreateScale(m_fScale);
-	yaw   = Matrix::CreateRotationY(m_fYaw);
-	pitch = Matrix::CreateRotationX(m_fPitch);
-	roll  = Matrix::CreateRotationZ(m_fRoll);
-	trans = Matrix::CreateTranslation(m_vPos);
-
-	world = scale * yaw * pitch * roll * trans;
-	m_mFinalWorld = world;
-
-	//バーテックスバッファーをセット（バーテックスバッファーは一つでいい）
 	auto context = Window::GetInstance()->DeviceContext();
-	UINT stride = sizeof(MY_VERTEX);
-	UINT offset = 0;
-	context->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
-	//使用するシェーダーの登録	
-	context->VSSetShader(m_vertexShader, NULL, 0);
-	context->PSSetShader(m_pixelShader, NULL, 0);
-	//頂点インプットレイアウトをセット
-	context->IASetInputLayout(m_vertexLayout);
+
 
 	D3D11_MAPPED_SUBRESOURCE pData;
-	if (SUCCEEDED(context->Map(m_pConstantBuffer0, 0, D3D11_MAP_WRITE_DISCARD, 0, &pData)))
+	if (SUCCEEDED(context->Map(m_constantBuffer0, 0, D3D11_MAP_WRITE_DISCARD, 0, &pData)))
 	{
 		SHADER_GLOBAL0 sg;
 		//ライトの方向を渡す
@@ -683,11 +640,26 @@ void FbxSkinMesh::Render(const Matrix& mView, const Matrix& mProj,
 		sg.eyePos = Vec4(vEye.m_x, vEye.m_y, vEye.m_z, 0.0f);
 
 		memcpy_s(pData.pData, pData.RowPitch, (void*)&sg, sizeof(SHADER_GLOBAL0));
-		context->Unmap(m_pConstantBuffer0, 0);
+		context->Unmap(m_constantBuffer0, 0);
 	}
 	
-	context->VSSetConstantBuffers(0, 1, &m_pConstantBuffer0);
-	context->PSSetConstantBuffers(0, 1, &m_pConstantBuffer0);
+	//使用するシェーダーの登録	
+	context->VSSetShader(m_vertexShader, NULL, 0);
+	context->PSSetShader(m_pixelShader, NULL, 0);
+
+
+
+	//このコンスタントバッファーを使うシェーダーの登録
+	context->VSSetConstantBuffers(0, 1, &m_constantBuffer0);
+	context->PSSetConstantBuffers(0, 1, &m_constantBuffer0);
+	
+	//頂点インプットレイアウトをセット
+	context->IASetInputLayout(m_vertexLayout);
+
+	//バーテックスバッファーをセット（バーテックスバッファーは一つでいい）
+	UINT stride = sizeof(MY_VERTEX);
+	UINT offset = 0;
+	context->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
 
 	//マテリアルの数だけ、それぞれのマテリアルのインデックスバッファ－を描画
 	for (DWORD i = 0; i < m_dwNumMaterial; i++)
@@ -704,41 +676,33 @@ void FbxSkinMesh::Render(const Matrix& mView, const Matrix& mProj,
 
 		//プリミティブ・トポロジーをセット
 		context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
+		
 		//マテリアルの各要素と変換行列をシェーダーに渡す
-
-		//ワールド行列をシェーダーに渡す
-		//ワールド・ビュー・プロジェクション行列をシェーダーに渡す
-		//ディフューズカラーをシェーダーに渡す
-		//スペキュラーをシェーダーに渡す
-		//スペキュラーのパワーをシェーダーに渡す
-		//アンビエントをシェーダーに渡す
-
 		D3D11_MAPPED_SUBRESOURCE pData;
-		if (SUCCEEDED(context->Map(m_pConstantBuffer1, 0, D3D11_MAP_WRITE_DISCARD, 0, &pData)))
+		if (SUCCEEDED(context->Map(m_constantBuffer1, 0, D3D11_MAP_WRITE_DISCARD, 0, &pData)))
 		{
 			SHADER_GLOBAL1 sg;
-			sg.world = m_mFinalWorld;
-			sg.world=Matrix::Transpose(sg.world);
-
-			sg.wvp = m_mFinalWorld*m_mView*m_mProj;
-			sg.wvp = Matrix::Transpose(sg.wvp);
+			sg.world=Matrix::Transpose(world);
+			sg.wvp = Matrix::Transpose((world * view * proj));
 			
 			sg.ambient = m_material[i].Ka;//アンビエントををシェーダーに渡す
 			sg.diffuse = m_material[i].Kd;//ディフューズカラーをシェーダーに渡す
 			sg.specular = m_material[i].Ks;//スペキュラーをシェーダーに渡す
 
 			memcpy_s(pData.pData, pData.RowPitch, (void*)&sg, sizeof(SHADER_GLOBAL1));
-			context->Unmap(m_pConstantBuffer1, 0);
+			context->Unmap(m_constantBuffer1, 0);
 		}
-		context->VSSetConstantBuffers(1, 1, &m_pConstantBuffer1);
-		context->PSSetConstantBuffers(1, 1, &m_pConstantBuffer1);
+	
+		context->VSSetConstantBuffers(1, 1, &m_constantBuffer1);
+		context->PSSetConstantBuffers(1, 1, &m_constantBuffer1);
+
 		//テクスチャーをシェーダーに渡す
 		if (m_material[i].szTextureName[0] != NULL)
 		{
-			context->PSSetSamplers(0, 1, &m_pSampleLinear);
+			context->PSSetSamplers(0, 1, &m_sampleLinear);
 			context->PSSetShaderResources(0, 1, &m_material[i].pTexture);
 		}
+
 		//Draw
 		context->DrawIndexed(m_material[i].dwNumFace * 3, 0, 0);
 	}

@@ -129,5 +129,5 @@ float4 PSSkin(PSSkinIn input) : SV_Target
 {	
     float4 TexDiffuse = g_texDecal.Sample( g_samLinear, input.Tex ); 
 
-	return  input.Color/3+TexDiffuse*2/3;
+    return input.Color / 3 + TexDiffuse * 2 / 3;
 }

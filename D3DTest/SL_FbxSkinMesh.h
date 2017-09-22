@@ -94,20 +94,17 @@ namespace ShunLib {
 	{
 	private:
 		//外部のデバイス等情報
-		ID3D11SamplerState* m_pSampleLinear;
-		ID3D11Buffer* m_pConstantBuffer0;
-		ID3D11Buffer* m_pConstantBuffer1;
-		ID3D11Buffer* m_pConstantBufferBone;
+		ID3D11SamplerState* m_sampleLinear;
+		ID3D11Buffer* m_constantBuffer0;
+		ID3D11Buffer* m_constantBuffer1;
+		ID3D11Buffer* m_constantBufferBone;
 		ID3D11InputLayout* m_vertexLayout;
 		ID3D11VertexShader* m_vertexShader;
 		ID3D11PixelShader* m_pixelShader;
-		Matrix m_mView;
-		Matrix m_mProj;
 
 		//FBX
-		FbxManager *m_pSdkManager;
-		FbxImporter* m_pImporter;
-		FbxScene* m_pmyScene;
+		FbxImporter* m_importer;
+		FbxScene* m_scene;
 
 		//メッシュ関連	
 		DWORD m_dwNumVert;
@@ -124,17 +121,13 @@ namespace ShunLib {
 		BONE* m_bone;
 		FbxCluster** m_ppCluster;
 
-		Vec3 m_vPos;
-		float m_fYaw, m_fPitch, m_fRoll;
-		float m_fScale;
-
 	public:
 		FbxSkinMesh();
 		~FbxSkinMesh();
 		
 		//メソッド
 		HRESULT CreateIndexBuffer(DWORD dwSize, int* pIndex, ID3D11Buffer** ppIndexBuffer);
-		void Render(const Matrix& mView, const Matrix& mProj, const Vec3& vLight, const Vec3& vEye);
+		void Render(const Matrix& world, const Matrix& view, const Matrix& proj, const Vec3& vLight, const Vec3& vEye);
 		HRESULT Init(LPSTR FileName);
 		HRESULT InitShader();
 		HRESULT InitFBX(CHAR* szFileName);
@@ -143,5 +136,11 @@ namespace ShunLib {
 		void SetNewPoseMatrices(int frame);
 		Matrix GetCurrentPoseMatrix(int index);
 
+
+		void SampleLinear(ID3D11SamplerState* sl) { m_sampleLinear = sl; }
+		ID3D11SamplerState* SampleLinear() { return m_sampleLinear; }
+	
+		void ConstantBuffer(ID3D11Buffer* buffer) { m_constantBuffer1 = buffer; }
+		ID3D11Buffer* ConstantBuffer() { return m_constantBuffer1; }
 	};
 }
