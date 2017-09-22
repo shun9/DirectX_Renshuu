@@ -51,11 +51,11 @@ namespace ShunLib
 			bool ReadText(std::string* buf, int byte, PMXByte encode, FILE* file);
 			bool ReadBoneWeight(PMXBoneWeight* buf, PMXByte type, FILE* file);
 			bool ReadBoneFlag(PmxBoneInfo* buf,unsigned short flag, FILE* file);
-			bool ReadGroupMorphOffset(GroupMorphOffset* buf, int count, FILE* file);
-			bool ReadVertexMorphOffset(VertexMorphOffset* buf, int count, FILE* file);
-			bool ReadBoneMorphOffset(BoneMoptOffset* buf, int count, FILE* file);
-			bool ReadUVMorphOffset(UVMorphOffset* buf, int count, FILE* file);
-			bool ReadMaterialMorphOffset(MaterialMorphOffset* buf, int count, FILE* file);
+			bool ReadGroupMorphOffset(std::vector<GroupMorphOffset>* buf, int count, FILE* file);
+			bool ReadVertexMorphOffset(std::vector<VertexMorphOffset>* buf, int count, FILE* file);
+			bool ReadBoneMorphOffset(std::vector<BoneMoptOffset>* buf, int count, FILE* file);
+			bool ReadUVMorphOffset(std::vector<UVMorphOffset>* buf, int count, FILE* file);
+			bool ReadMaterialMorphOffset(std::vector<MaterialMorphOffset>* buf, int count, FILE* file);
 
 			bool MakeMorphOffset(PMXMorphInfo* buf, PMXByte type, int count, FILE* file);
 		};

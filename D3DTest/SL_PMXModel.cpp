@@ -9,12 +9,7 @@ using namespace ShunLib::PMX;
 
 ShunLib::PMX::PMXModel::~PMXModel()
 {
-	//モーフのオフセットを削除
-	//MakeMorphOffsetにて生成
-	for (int i = 0; i < m_morph.count; i++)
-	{
-		SAFE_DELETE_ARRAY(m_morph.info[i].morphOffsetList);
-	}
+
 }
 
 /// <summary>
@@ -435,10 +430,10 @@ bool PMXModel::LoadRigidBody(FILE * file)
 
 	PMXByte boneIndexSize = m_header.data[HEADER_DATA_2_0::BONE_INDEX];
 
-	//表示枠情報読み込み
+	//剛体情報読み込み
 	for (int i = 0; i < m_rigidBody.count; i++)
 	{
-		//表示枠名　表示枠名(英語)
+		//剛体名　剛体名(英語)
 		ReadName(&m_rigidBody.info[i].rigidBodyName, file);
 		ReadName(&m_rigidBody.info[i].rigidBodyNameE, file);
 
@@ -488,16 +483,43 @@ bool PMXModel::LoadJoint(FILE * file)
 		return false;
 	}
 
-	// 表示枠数
+	// ジョイント数
 	fread_s(&m_joint.count, sizeof(int), sizeof(int), 1, file);
 	m_joint.info.resize(m_joint.count);
 
-	//表示枠情報読み込み
+	PMXByte rigidIndexSize = m_header.data[HEADER_DATA_2_0::RIGID_INDEX];
+
+	//ジョイント情報読み込み
 	for (int i = 0; i < m_joint.count; i++)
 	{
-		//表示枠名　表示枠名(英語)
+		//ジョイント名　ジョイント名(英語)
 		ReadName(&m_joint.info[i].jointName, file);
 		ReadName(&m_joint.info[i].jointNameE, file);
+
+		//ジョイント種類
+		fread_s(&m_joint.info[i].jointType, sizeof(PMXByte), sizeof(PMXByte), 1, file);
+
+		if (m_joint.info[i].jointType == 0)
+		{
+			//関連剛体A,BのIndex
+			fread_s(&m_joint.info[i].rigidBodyAIndex, rigidIndexSize, rigidIndexSize, 1, file);
+			fread_s(&m_joint.info[i].rigidBodyBIndex, rigidIndexSize, rigidIndexSize, 1, file);
+
+			//位置
+			fread_s(&m_joint.info[i].position, sizeof(Vec3), sizeof(Vec3), 1, file);
+			//回転
+			fread_s(&m_joint.info[i].rotation, sizeof(Vec3), sizeof(Vec3), 1, file);
+			//移動制限
+			fread_s(&m_joint.info[i].moveLimitationMin, sizeof(Vec3), sizeof(Vec3), 1, file);
+			fread_s(&m_joint.info[i].moveLimitationMax, sizeof(Vec3), sizeof(Vec3), 1, file);
+			//回転制限
+			fread_s(&m_joint.info[i].rotationLimitationMin, sizeof(Vec3), sizeof(Vec3), 1, file);
+			fread_s(&m_joint.info[i].rotationLimitationMax, sizeof(Vec3), sizeof(Vec3), 1, file);
+			//バネ定数　移動
+			fread_s(&m_joint.info[i].springMoveCoefficient, sizeof(Vec3), sizeof(Vec3), 1, file);
+			//バネ定数　回転
+			fread_s(&m_joint.info[i].springRotationCoefficient, sizeof(Vec3), sizeof(Vec3), 1, file);
+		}
 	}
 	return true;
 }
@@ -692,13 +714,13 @@ bool PMXModel::ReadBoneFlag(PmxBoneInfo * buf, unsigned short flag, FILE * file)
 /// <param name="buf">情報を入れるバッファー</param>
 /// <param name="count">作成数</param>
 /// <param name="file">読み込むファイル</param>
-bool PMXModel::ReadGroupMorphOffset(GroupMorphOffset* buf,int count, FILE * file)
+bool PMXModel::ReadGroupMorphOffset(vector<GroupMorphOffset>* buf,int count, FILE * file)
 {
 	PMXByte morphIndexSize = m_header.data[HEADER_DATA_2_0::MORPH_INDEX];
 	for (int i = 0; i < count; i++)
 	{
-		fread_s(&buf[i].morphIndex, morphIndexSize, morphIndexSize, 1, file);
-		fread_s(&buf[i].morphRatio, sizeof(float), sizeof(float), 1, file);
+		fread_s(&(*buf)[i].morphIndex, morphIndexSize, morphIndexSize, 1, file);
+		fread_s(&(*buf)[i].morphRatio, sizeof(float), sizeof(float), 1, file);
 	}
 
 	return true;
@@ -710,13 +732,13 @@ bool PMXModel::ReadGroupMorphOffset(GroupMorphOffset* buf,int count, FILE * file
 /// <param name="buf">情報を入れるバッファー</param>
 /// <param name="count">作成数</param>
 /// <param name="file">読み込むファイル</param>
-bool ShunLib::PMX::PMXModel::ReadVertexMorphOffset(VertexMorphOffset * buf, int count, FILE * file)
+bool ShunLib::PMX::PMXModel::ReadVertexMorphOffset(vector<VertexMorphOffset>* buf, int count, FILE * file)
 {
 	PMXByte vertexIndexSize = m_header.data[HEADER_DATA_2_0::VERTEX_INDEX];
 	for (int i = 0; i < count; i++)
 	{
-		fread_s(&buf[i].vertexIndex, vertexIndexSize, vertexIndexSize, 1, file);
-		fread_s(&buf[i].positionOffset, sizeof(Vec3), sizeof(Vec3), 1, file);
+		fread_s(&(*buf)[i].vertexIndex, vertexIndexSize, vertexIndexSize, 1, file);
+		fread_s(&(*buf)[i].positionOffset, sizeof(Vec3), sizeof(Vec3), 1, file);
 	}
 	return true;
 }
@@ -727,14 +749,14 @@ bool ShunLib::PMX::PMXModel::ReadVertexMorphOffset(VertexMorphOffset * buf, int 
 /// <param name="buf">情報を入れるバッファー</param>
 /// <param name="count">作成数</param>
 /// <param name="file">読み込むファイル</param>
-bool ShunLib::PMX::PMXModel::ReadBoneMorphOffset(BoneMoptOffset * buf, int count, FILE * file)
+bool ShunLib::PMX::PMXModel::ReadBoneMorphOffset(vector<BoneMoptOffset>* buf, int count, FILE * file)
 {
 	PMXByte boneIndexSize = m_header.data[HEADER_DATA_2_0::BONE_INDEX];
 	for (int i = 0; i < count; i++)
 	{
-		fread_s(&buf[i].boneIndex, boneIndexSize, boneIndexSize, 1, file);
-		fread_s(&buf[i].quantityOfMoving, sizeof(Vec3), sizeof(Vec3), 1, file);
-		fread_s(&buf[i].quantityOfRotating, sizeof(Vec4), sizeof(Vec4), 1, file);
+		fread_s(&(*buf)[i].boneIndex, boneIndexSize, boneIndexSize, 1, file);
+		fread_s(&(*buf)[i].quantityOfMoving, sizeof(Vec3), sizeof(Vec3), 1, file);
+		fread_s(&(*buf)[i].quantityOfRotating, sizeof(Vec4), sizeof(Vec4), 1, file);
 	}
 	return true;
 }
@@ -745,13 +767,13 @@ bool ShunLib::PMX::PMXModel::ReadBoneMorphOffset(BoneMoptOffset * buf, int count
 /// <param name="buf">情報を入れるバッファー</param>
 /// <param name="count">作成数</param>
 /// <param name="file">読み込むファイル</param>
-bool ShunLib::PMX::PMXModel::ReadUVMorphOffset(UVMorphOffset * buf, int count, FILE * file)
+bool ShunLib::PMX::PMXModel::ReadUVMorphOffset(vector<UVMorphOffset>* buf, int count, FILE * file)
 {
 	PMXByte vertexIndexSize = m_header.data[HEADER_DATA_2_0::VERTEX_INDEX];
 	for (int i = 0; i < count; i++)
 	{
-		fread_s(&buf[i].vertexIndex, vertexIndexSize, vertexIndexSize, 1, file);
-		fread_s(&buf[i].uvOffset, sizeof(Vec4), sizeof(Vec4), 1, file);
+		fread_s(&(*buf)[i].vertexIndex, vertexIndexSize, vertexIndexSize, 1, file);
+		fread_s(&(*buf)[i].uvOffset, sizeof(Vec4), sizeof(Vec4), 1, file);
 	}
 	return true;
 }
@@ -762,22 +784,22 @@ bool ShunLib::PMX::PMXModel::ReadUVMorphOffset(UVMorphOffset * buf, int count, F
 /// <param name="buf">情報を入れるバッファー</param>
 /// <param name="count">作成数</param>
 /// <param name="file">読み込むファイル</param>
-bool ShunLib::PMX::PMXModel::ReadMaterialMorphOffset(MaterialMorphOffset * buf, int count, FILE * file)
+bool ShunLib::PMX::PMXModel::ReadMaterialMorphOffset(vector<MaterialMorphOffset>* buf, int count, FILE * file)
 {
 	PMXByte materialIndexSize = m_header.data[HEADER_DATA_2_0::MATERIAL_INDEX];
 	for (int i = 0; i < count; i++)
 	{
-		fread_s(&buf[i].materialIndex, materialIndexSize, materialIndexSize, 1, file);
-		fread_s(&buf[i].offsetCalclationType, sizeof(PMXByte), sizeof(PMXByte), 1, file);
-		fread_s(&buf[i].diffuse, sizeof(Vec4), sizeof(Vec4), 1, file);
-		fread_s(&buf[i].specular, sizeof(Vec3), sizeof(Vec3), 1, file);
-		fread_s(&buf[i].specularCoefficient, sizeof(float), sizeof(float), 1, file);
-		fread_s(&buf[i].ambient, sizeof(Vec3), sizeof(Vec3), 1, file);
-		fread_s(&buf[i].edgeColor, sizeof(Vec4), sizeof(Vec4), 1, file);
-		fread_s(&buf[i].edgeSize, sizeof(float), sizeof(float), 1, file);
-		fread_s(&buf[i].textureCoefficient, sizeof(Vec4), sizeof(Vec4), 1, file);
-		fread_s(&buf[i].sphereTextureCoefficient, sizeof(Vec4), sizeof(Vec4), 1, file);
-		fread_s(&buf[i].toonTextureCoefficient, sizeof(Vec4), sizeof(Vec4), 1, file);
+		fread_s(&(*buf)[i].materialIndex, materialIndexSize, materialIndexSize, 1, file);
+		fread_s(&(*buf)[i].offsetCalclationType, sizeof(PMXByte), sizeof(PMXByte), 1, file);
+		fread_s(&(*buf)[i].diffuse, sizeof(Vec4), sizeof(Vec4), 1, file);
+		fread_s(&(*buf)[i].specular, sizeof(Vec3), sizeof(Vec3), 1, file);
+		fread_s(&(*buf)[i].specularCoefficient, sizeof(float), sizeof(float), 1, file);
+		fread_s(&(*buf)[i].ambient, sizeof(Vec3), sizeof(Vec3), 1, file);
+		fread_s(&(*buf)[i].edgeColor, sizeof(Vec4), sizeof(Vec4), 1, file);
+		fread_s(&(*buf)[i].edgeSize, sizeof(float), sizeof(float), 1, file);
+		fread_s(&(*buf)[i].textureCoefficient, sizeof(Vec4), sizeof(Vec4), 1, file);
+		fread_s(&(*buf)[i].sphereTextureCoefficient, sizeof(Vec4), sizeof(Vec4), 1, file);
+		fread_s(&(*buf)[i].toonTextureCoefficient, sizeof(Vec4), sizeof(Vec4), 1, file);
 	}
 	return true;
 }
@@ -785,7 +807,6 @@ bool ShunLib::PMX::PMXModel::ReadMaterialMorphOffset(MaterialMorphOffset * buf, 
 
 /// <summary>
 /// モーフのオフセットを作成
-/// ※動的に確保するためdeleteが必要
 /// </summary>
 /// <param name="buf">情報を入れるバッファー</param>
 /// <param name="type">モーフの種類</param>
@@ -796,48 +817,48 @@ bool PMXModel::MakeMorphOffset(PMXMorphInfo* buf, PMXByte type, int count, FILE 
 	switch (type)
 	{
 	case MOTPH_TYPE::GROUP:
-		buf->morphOffsetList = new GroupMorphOffset[count];
-		ReadGroupMorphOffset(static_cast<GroupMorphOffset*>(buf->morphOffsetList), count, file);
+		buf->morphOffsetList.groupOffset.resize(count);
+		ReadGroupMorphOffset(&(buf->morphOffsetList.groupOffset), count, file);
 		break;
 
 	case MOTPH_TYPE::VERTEX:
-		buf->morphOffsetList = new VertexMorphOffset[count];
-		ReadVertexMorphOffset(static_cast<VertexMorphOffset*>(buf->morphOffsetList), count, file);
+		buf->morphOffsetList.vertexOffset.resize(count);
+		ReadVertexMorphOffset(&(buf->morphOffsetList.vertexOffset), count, file);
 		break;
 
 	case MOTPH_TYPE::BONE:
-		buf->morphOffsetList = new BoneMoptOffset[count];
-		ReadBoneMorphOffset(static_cast<BoneMoptOffset*>(buf->morphOffsetList), count, file);
+		buf->morphOffsetList.boneOffset.resize(count);
+		ReadBoneMorphOffset(&(buf->morphOffsetList.boneOffset), count, file);
 		break;
 
 	case MOTPH_TYPE::UV:
-		buf->morphOffsetList = new UVMorphOffset[count];
-		ReadUVMorphOffset(static_cast<UVMorphOffset*>(buf->morphOffsetList), count, file);
+		buf->morphOffsetList.uvOffset.resize(count);
+		ReadUVMorphOffset(&(buf->morphOffsetList.uvOffset), count, file);
 		break;
 
 	case MOTPH_TYPE::ADD_UV1:
-		buf->morphOffsetList = new UVMorphOffset[count];
-		ReadUVMorphOffset(static_cast<UVMorphOffset*>(buf->morphOffsetList), count, file);
+		buf->morphOffsetList.addUv1Offset.resize(count);
+		ReadUVMorphOffset(&(buf->morphOffsetList.addUv1Offset), count, file);
 		break;
 
 	case MOTPH_TYPE::ADD_UV2:
-		buf->morphOffsetList = new UVMorphOffset[count];
-		ReadUVMorphOffset(static_cast<UVMorphOffset*>(buf->morphOffsetList), count, file);
+		buf->morphOffsetList.addUv2Offset.resize(count);
+		ReadUVMorphOffset(&(buf->morphOffsetList.addUv2Offset), count, file);
 		break;
 
 	case MOTPH_TYPE::ADD_UV3:
-		buf->morphOffsetList = new UVMorphOffset[count];
-		ReadUVMorphOffset(static_cast<UVMorphOffset*>(buf->morphOffsetList), count, file);
+		buf->morphOffsetList.addUv3Offset.resize(count);
+		ReadUVMorphOffset(&(buf->morphOffsetList.addUv3Offset), count, file);
 		break;
 
 	case MOTPH_TYPE::ADD_UV4:
-		buf->morphOffsetList = new UVMorphOffset[count];
-		ReadUVMorphOffset(static_cast<UVMorphOffset*>(buf->morphOffsetList), count, file);
+		buf->morphOffsetList.addUv4Offset.resize(count);
+		ReadUVMorphOffset(&(buf->morphOffsetList.addUv4Offset), count, file);
 		break;
 
 	case MOTPH_TYPE::MATERIAL:
-		buf->morphOffsetList = new MaterialMorphOffset[count];
-		ReadMaterialMorphOffset(static_cast<MaterialMorphOffset*>(buf->morphOffsetList), count, file);
+		buf->morphOffsetList.materialOffset.resize(count);
+		ReadMaterialMorphOffset(&(buf->morphOffsetList.materialOffset), count, file);
 		break;
 
 	default:

@@ -4,6 +4,7 @@
 #include <SL_Vec2.h>
 
 #include <vector>
+#include <memory>
 #include <string>
 
 namespace ShunLib
@@ -198,6 +199,19 @@ namespace ShunLib
 			Vec3 torqueOfRotating;    // 回転トルク (x,y,z)   ※ 移動速度／回転トルク すべて 0 の場合は"停止制御"として特殊化
 		};
 
+		//モーフオフセットのリスト
+		struct MorphOffsetList
+		{
+			std::vector<GroupMorphOffset>groupOffset;
+			std::vector<VertexMorphOffset>vertexOffset;
+			std::vector<UVMorphOffset>uvOffset;
+			std::vector<UVMorphOffset>addUv1Offset;
+			std::vector<UVMorphOffset>addUv2Offset;
+			std::vector<UVMorphOffset>addUv3Offset;
+			std::vector<UVMorphOffset>addUv4Offset;
+			std::vector<BoneMoptOffset>boneOffset;
+			std::vector<MaterialMorphOffset>materialOffset;
+		};
 		// モーフ
 		// ○モーフ種類
 		// 格納可能なモーフは大別して、頂点モーフ、UVモーフ、ボーンモーフ、材質モーフ、
@@ -212,7 +226,7 @@ namespace ShunLib
 			PMXByte operationPanel;    // 操作パネル (PMD:カテゴリ) 1:眉(左下) 2:目(左上) 3:口(右上) 4:その他(右下)  | 0:システム予約
 			PMXByte type;              // モーフ種類 - 0:グループ, 1:頂点, 2:ボーン, 3:UV, 4:追加UV1, 5:追加UV2, 6:追加UV3, 7:追加UV4, 8:材質,  9:フリップ(※2.1拡張) 10:インパルス(※2.1拡張)
 			int morphOffsetCount;      // モーフのオフセット数 : 後続の要素数
-			void* morphOffsetList;     // モーフ種類に従ってオフセットデータを格納 ※異なる種類の混合は不可
+			MorphOffsetList morphOffsetList;     // モーフ種類に従ってオフセットデータを格納 ※異なる種類の混合は不可
 		};
 
 
