@@ -219,7 +219,7 @@ void ShunLib::Window::GameUpdate()
 void ShunLib::Window::Clear()
 {
 	//‰æ–Ê‚ÌF
-	float color[4] = { 0,0,1,1 };
+	float color[4] = { 0,1,1,1 };
 
 	//‰æ–ÊƒNƒŠƒA
 	m_deviceContext->ClearRenderTargetView(m_recderTargetView, color);

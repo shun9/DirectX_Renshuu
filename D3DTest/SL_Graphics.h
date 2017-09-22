@@ -6,7 +6,10 @@
 #include <SL_Matrix.h>
 #include <d3d11.h>
 #include <d3dcompiler.h>
-#include "SL_FBXMesh.h"
+//#include "SL_FBXMesh.h"
+#include "SL_FbxSkinMesh.h"
+#include "SL_PMXModel.h"
+
 //頂点の構造体
 struct SimpleVertex
 {
@@ -54,17 +57,16 @@ namespace ShunLib {
 		ID3D11SamplerState* m_sampleLinear; //テクスチャ―のサンプラー
 		ID3D11ShaderResourceView* m_texture;//テクスチャ―
 
-		MESH m_mesh;	
-		FBXMesh* m_fbxMesh;
+		//FBX
+		FbxManager* m_FBXManager;
+
+		PMX::PMXModel* m_pmxModel;
 
 	public:
 		HRESULT InitShader();
-		HRESULT InitStaticMesh(LPSTR fileName, MESH* mesh);
 
 		void TestUpdate();
 		void TestRender();
-
-		MESH* Mesh() { return &m_mesh; }
 
 		HRESULT CreateShaderResourceView(
 			const wchar_t* path, 
@@ -74,7 +76,10 @@ namespace ShunLib {
 			const wchar_t* fileName,
 			const char* entryPoint, 
 			const char* target, 
-			ID3D11VertexShader** vs);
+			ID3D11VertexShader** vs,
+			const D3D11_INPUT_ELEMENT_DESC layout[],
+			const UINT& layoutSize,
+			ID3D11InputLayout** il);
 
 		HRESULT CreatePixleShader(
 			const wchar_t* fileName, 
@@ -82,11 +87,8 @@ namespace ShunLib {
 			const char* target, 
 			ID3D11PixelShader** ps);
 
-		HRESULT CreateInputLayout(
-			const D3D11_INPUT_ELEMENT_DESC layout[],
-			const UINT& layoutSize,
-			ID3D11InputLayout** il);
 		
+		FbxManager* FBXManager() { return m_FBXManager; }
 
 	private:
 		Graphics() { 
@@ -99,7 +101,7 @@ namespace ShunLib {
 			m_sampleLinear   = nullptr;
 			m_texture        = nullptr;
 
-			ZeroMemory(&m_mesh, sizeof(m_mesh));
+			m_FBXManager = FbxManager::Create();
 		}
 		~Graphics() {
 			SAFE_RELEASE(m_constantBuffer0);
@@ -108,6 +110,14 @@ namespace ShunLib {
 			SAFE_RELEASE(m_pixelShader);
 			SAFE_RELEASE(m_vertexBuffer);
 			SAFE_RELEASE(m_vertexLayout);
+
+			m_FBXManager->Destroy();
 		}
+
+
+		HRESULT CreateInputLayout(
+			const D3D11_INPUT_ELEMENT_DESC layout[],
+			const UINT& layoutSize,
+			ID3D11InputLayout** il);
 	};
 }
