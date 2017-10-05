@@ -69,8 +69,15 @@ namespace ShunLib
 			Vec3 pos;                //位置
 			Vec3 normal;             //法線
 			Vec2 uv;                 //UV
-			std::vector<Vec4> addUv; //追加UV
-			PMXByte weightType;      //ウェイト変形方式 
+			//PMXByte weightType;      //ウェイト変形方式
+			//PMXBoneWeight boneWeight;//ボーンのウェイト
+			//float edgeScale;         //エッジ倍率
+		};
+
+		struct PMXVertexBoneWeightInfo
+		{
+			Vec4 addUv[4];			 //追加UV
+			PMXByte weightType;      //ウェイト変形方式
 			PMXBoneWeight boneWeight;//ボーンのウェイト
 			float edgeScale;         //エッジ倍率
 		};
@@ -78,9 +85,7 @@ namespace ShunLib
 		//面情報
 		struct PMXFaceInfo
 		{
-			int a;
-			int b;
-			int c;
+			int index;
 		};
 
 		//マテリアル情報
@@ -88,7 +93,7 @@ namespace ShunLib
 		{
 			PMXTextBuf materialName;              // 材質名
 			PMXTextBuf materialNameE;            // 材質名（英語）
-			Vec3 diffuse;                         // 拡散色 (R,G,B,A)
+			Vec4 diffuse;                         // 拡散色 (R,G,B,A)
 			Vec3 specular;                        // 反射色 (R,G,B)
 			float shininess;                      // 反射色係数
 			Vec3 ambient;                         // 環境色 (R,G,B)
@@ -116,24 +121,24 @@ namespace ShunLib
 		//ボーン
 		struct PmxBoneInfo
 		{
-			PMXTextBuf boneName;            // ボーン名
-			PMXTextBuf boneNameE;          // ボーン名（英語）
-			Vec3 position;                  // 位置
-			int parentBoneIndex;            // 親ボーンのボーンIndex
-			int deformationLevel;           // 変形階層
-			unsigned short boneFlag;        // ボーンフラグ(16bit) 各bit 0:OFF 1:ON
-			Vec3 positionOffset;            // 座標オフセット, ボーン位置からの相対分
-			int connectedBoneIndex;         // 接続先ボーンのボーンIndex
-			int providedParentBoneIndex;    // 付与親ボーンのボーンIndex
-			float providedRatio;            // 付与率
-			Vec3 axisDirectionVector;       // 軸の方向ベクトル
-			Vec3 dimentionXDirectionVector; // X軸の方向ベクトル
-			Vec3 dimentionZDirectionVector; // Z軸の方向ベクトル
-			int keyValue;                   // Key値
-			int ikTargetBoneIndex;          // IKターゲットボーンのボーンIndex
-			int ikLoopCount;                // IKループ回数 (PMD及びMMD環境では255回が最大になるようです)
-			float ikLimitedRadian;          // IKループ計算時の1回あたりの制限角度 -> ラジアン角 | PMDのIK値とは4倍異なるので注意
-			int ikLinkCount;                // IKリンク数 : 後続の要素数
+			PMXTextBuf boneName;              // ボーン名
+			PMXTextBuf boneNameE;             // ボーン名（英語）
+			Vec3 position;                    // 位置
+			int parentBoneIndex;              // 親ボーンのボーンIndex
+			int deformationLevel;             // 変形階層
+			unsigned short boneFlag;          // ボーンフラグ(16bit) 各bit 0:OFF 1:ON
+			Vec3 positionOffset;              // 座標オフセット, ボーン位置からの相対分
+			int connectedBoneIndex;           // 接続先ボーンのボーンIndex
+			int providedParentBoneIndex;      // 付与親ボーンのボーンIndex
+			float providedRatio;              // 付与率
+			Vec3 axisDirectionVector;         // 軸の方向ベクトル
+			Vec3 dimentionXDirectionVector;   // X軸の方向ベクトル
+			Vec3 dimentionZDirectionVector;   // Z軸の方向ベクトル
+			int keyValue;                     // Key値
+			int ikTargetBoneIndex;            // IKターゲットボーンのボーンIndex
+			int ikLoopCount;                  // IKループ回数 (PMD及びMMD環境では255回が最大になるようです)
+			float ikLimitedRadian;            // IKループ計算時の1回あたりの制限角度 -> ラジアン角 | PMDのIK値とは4倍異なるので注意
+			int ikLinkCount;                  // IKリンク数 : 後続の要素数
 			std::vector<PMXIKLink> ikLinkList;// IKリンクリスト
 		};
 
@@ -285,7 +290,7 @@ namespace ShunLib
 			Vec3 springRotationCoefficient;   // バネ定数-回転(x,y,z)
 		};
 
-		// アンカー剛体       
+		// アンカー剛体
 		struct AnchorRigidBody
 		{
 			int RigidBodyIndex;                 // 関連剛体Index
@@ -293,13 +298,13 @@ namespace ShunLib
 			PMXByte    NearMode;                // Near モード  0:OFF 1:ON
 		};
 
-		// Pin頂点        
+		// Pin頂点
 		struct PinVertex
 		{
 			int VertexIndex;                    // 関連頂点Index
 		};
 
-		// Config       
+		// Config
 		struct Config
 		{
 			float   VCF;                        // VCF
@@ -364,7 +369,7 @@ namespace ShunLib
 			Iteration iteration;                // Iteration
 			Material material;                  // Material
 			int AnchorRigidBodyNumber;          // アンカー剛体数
-			AnchorRigidBody *anchorRigidBody;   // アンカー剛体   
+			AnchorRigidBody *anchorRigidBody;   // アンカー剛体
 			int PinVertexCount;                 // Pin頂点数
 			PinVertex *pinVertex;               // Pin頂点
 		};
@@ -374,6 +379,7 @@ namespace ShunLib
 		{
 			int count;
 			std::vector<PMXVertexInfo> info;
+			std::vector<PMXVertexBoneWeightInfo> boneWeightInfo;
 		};
 
 		//面

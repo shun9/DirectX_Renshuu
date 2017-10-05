@@ -151,19 +151,18 @@
     <ClCompile Include="SL_FbxSkinMesh.cpp" />
     <ClCompile Include="SL_Graphics.cpp" />
     <ClCompile Include="SL_PMXModel.cpp" />
+    <ClCompile Include="SL_PMXModelData.cpp" />
     <ClCompile Include="SL_Window.cpp" />
     <ClCompile Include="WinMain.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SL_PMXConstantNumber.h" />
     <ClInclude Include="SL_PMXModel.h" />
+    <ClInclude Include="SL_PMXModelData.h" />
     <ClInclude Include="SL_FbxSkinMesh.h" />
     <ClInclude Include="SL_Graphics.h" />
     <ClInclude Include="SL_PMXStruct.h" />
     <ClInclude Include="SL_Window.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="hand_tex.fbx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

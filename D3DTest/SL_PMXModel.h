@@ -1,63 +1,93 @@
+//************************************************/
+//* @file  :PMXModel.h
+//* @brief :PMXモデルを描画する
+//* @date  :2017/10/05
+//* @author:S.Katou
+//************************************************/
 #pragma once
-#include "SL_PMXStruct.h"
-#include "SL_PMXConstantNumber.h"
-#include <cstdio>
+#include <memory>
+#include <d3d11.h>
+#include <SL_Matrix.h>
+#include <SL_MacroConstants.h>
+#include "SL_PMXModelData.h"
 
 namespace ShunLib
 {
 	namespace PMX
 	{
+		//コンスタントバッファ　行列
+		struct PMXConstantBuffer
+		{
+			Matrix world;
+			Matrix view;
+			Matrix proj;
+		};
+
+		//コンスタントバッファ　マテリアル
+		struct PMXMaterialBuffer
+		{
+			Vec4 diffuse;
+			Vec3 specular;
+			float specularPower;
+			Vec4 ambient;
+		};
+
 		class PMXModel
 		{
 		private:
-			PMXHeader m_header;
-			PMXModelInfo m_modelInfo;
-			PMXVertex m_vertex;
-			PMXFace m_face;
-			PMXTexture m_texture;
-			PmxMaterial m_material;
-			PMXBone m_bone;
-			PMXMorph m_morph;
-			PMXDisplayFrame m_displayframe;
-			PMXRigidBody m_rigidBody;
-			PMXJoint m_joint;
-			PMXSoftBody m_softBody;
+			//モデル情報
+			std::unique_ptr<PMXModelData>m_data;
+
+			//モデルの種類ごと
+			ID3D11InputLayout* m_vertexLayout;
+			ID3D11VertexShader* m_vertexShader;
+			ID3D11PixelShader* m_pixelShader;
+			ID3D11Buffer* m_constantBuffer;
+
+			//モデルごと
+			ID3D11Buffer* m_vertexBuffer;
+			ID3D11Buffer* m_indexBuffer;
+			ID3D11Buffer* m_materialBuffer;
+			ID3D11SamplerState* m_sampler;
+			ID3D11ShaderResourceView** m_texture;
 
 		public:
-			//コンストラクタ
-			PMXModel() {}
+			PMXModel() :
+				m_vertexLayout  (nullptr),
+				m_vertexShader  (nullptr),
+				m_pixelShader   (nullptr),
+				m_constantBuffer(nullptr),
+				m_vertexBuffer  (nullptr),
+				m_indexBuffer   (nullptr),
+				m_materialBuffer(nullptr),
+				m_sampler       (nullptr),
+				m_texture       (nullptr)
+			{}
+			~PMXModel() {
+				for (int i = 0; i < m_data->Material()->count; i++)
+				{
+					SAFE_RELEASE(m_texture[i]);
+				}
+				SAFE_DELETE_ARRAY(m_texture);
+				SAFE_RELEASE(m_sampler);
+				SAFE_RELEASE(m_materialBuffer);
+				SAFE_RELEASE(m_indexBuffer);
+				SAFE_RELEASE(m_vertexBuffer);
+				SAFE_RELEASE(m_constantBuffer);
+				SAFE_RELEASE(m_pixelShader);
+				SAFE_RELEASE(m_vertexLayout);
+				SAFE_RELEASE(m_vertexShader);
+			}
 
-			//デストラクタ
-			~PMXModel();
 
-			bool LoadModel(char* file);
+			bool Init(char* file);
+			void Draw(const Matrix& world, const Matrix& view, const Matrix& proj);
 
 		private:
-			bool Load(FILE* file);
-			bool LoadHeader(FILE* file);
-			bool LoadModelInfo(FILE* file);
-			bool LoadVertex(FILE* file);
-			bool LoadFace(FILE* file);
-			bool LoadTexture(FILE* file);
-			bool LoadMaterial(FILE* file);
-			bool LoadBone(FILE* file);
-			bool LoadMorph(FILE* file);
-			bool LoadDisplayFrame(FILE* file);
-			bool LoadRigidBody(FILE* file);
-			bool LoadJoint(FILE* file);
-			bool LoadSoftBody(FILE* file);
-
-			bool ReadName(PMXTextBuf* textBuf,FILE* file);
-			bool ReadText(std::string* buf, int byte, PMXByte encode, FILE* file);
-			bool ReadBoneWeight(PMXBoneWeight* buf, PMXByte type, FILE* file);
-			bool ReadBoneFlag(PmxBoneInfo* buf,unsigned short flag, FILE* file);
-			bool ReadGroupMorphOffset(std::vector<GroupMorphOffset>* buf, int count, FILE* file);
-			bool ReadVertexMorphOffset(std::vector<VertexMorphOffset>* buf, int count, FILE* file);
-			bool ReadBoneMorphOffset(std::vector<BoneMoptOffset>* buf, int count, FILE* file);
-			bool ReadUVMorphOffset(std::vector<UVMorphOffset>* buf, int count, FILE* file);
-			bool ReadMaterialMorphOffset(std::vector<MaterialMorphOffset>* buf, int count, FILE* file);
-
-			bool MakeMorphOffset(PMXMorphInfo* buf, PMXByte type, int count, FILE* file);
+			bool InitShader();
+			bool InitPolygon();
+			void SetMaterialBuffer(const PmxMaterialInfo* data, PMXMaterialBuffer* buf);
 		};
+
 	}
 }

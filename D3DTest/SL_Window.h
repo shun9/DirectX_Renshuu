@@ -26,7 +26,7 @@ namespace ShunLib
 		ID3D11RenderTargetView* m_recderTargetView;
 		ID3D11DepthStencilView* m_depthStencilView;
 		ID3D11Texture2D* m_texture2D;
-	
+
 	public:
 		//ウィンドウ作成
 		HRESULT Create(HINSTANCE);
@@ -73,6 +73,6 @@ namespace ShunLib
 		void GameUpdate();
 
 		//画面クリア
-		void Clear();	
+		void Clear();
 	};
 }

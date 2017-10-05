@@ -6,7 +6,7 @@
 LRESULT CALLBACK WndProc(HWND hWnd, UINT iMag, WPARAM wParam, LPARAM lParam);
 
 HRESULT ShunLib::Window::Create(HINSTANCE hInst)
-{	
+{
 	//ウィンドウ情報　0で初期化
 	WNDCLASSEX wc;
 	ZeroMemory(&wc, sizeof(wc));
@@ -57,7 +57,7 @@ HRESULT ShunLib::Window::InitD3D()
 	sd.SampleDesc.Count = 1;
 	sd.SampleDesc.Quality = 0;
 	sd.Windowed = TRUE;
-	
+
 	D3D_FEATURE_LEVEL featureLevels = D3D_FEATURE_LEVEL_11_0;
 	D3D_FEATURE_LEVEL* featureLevel = NULL;
 
@@ -90,8 +90,6 @@ HRESULT ShunLib::Window::InitD3D()
 	//※破棄ではない
 	SAFE_RELEASE(backBuffer);
 
-
-
 	//深度ステンシルビューの作成
 	//Zバッファとステンシルバッファに対するビュー
 	D3D11_TEXTURE2D_DESC descDepth;
@@ -108,7 +106,7 @@ HRESULT ShunLib::Window::InitD3D()
 	descDepth.MiscFlags = 0;
 	m_device->CreateTexture2D(&descDepth, NULL, &m_texture2D);
 	m_device->CreateDepthStencilView(m_texture2D, NULL, &m_depthStencilView);
-	
+
 	//レンダーターゲットビューと深度ステンシルビューをパイプラインに関連付ける
 	m_deviceContext->OMSetRenderTargets(1, &m_recderTargetView, m_depthStencilView);
 
@@ -199,7 +197,7 @@ void ShunLib::Window::Run()
 /// ゲームの更新
 /// </summary>
 void ShunLib::Window::GameUpdate()
-{		
+{
 	//画面クリア
 	Clear();
 
@@ -223,7 +221,7 @@ void ShunLib::Window::Clear()
 
 	//画面クリア
 	m_deviceContext->ClearRenderTargetView(m_recderTargetView, color);
-	
+
 	//深度バッファクリア
 	m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH,1.0f,0);
 }

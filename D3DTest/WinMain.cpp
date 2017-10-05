@@ -1,7 +1,7 @@
 #include <Windows.h>
-
 #include "SL_Window.h"
 #include "SL_Graphics.h"
+
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT iMag, WPARAM wParam, LPARAM lParam);
 
@@ -17,7 +17,7 @@ HRESULT InitGraphics();
 INT WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR szStr, INT iCmpShow)
 {
 	auto window = ShunLib::Window::GetInstance();
-	
+
 	//ウィンドウ作成
 	if (SUCCEEDED(InitWindow(hInst)))
 	{
@@ -56,7 +56,7 @@ HRESULT InitWindow(HINSTANCE hInst)
 	//ウィンドウ情報設定
 	window->Width(640.0f);
 	window->Height(480.0f);
-	window->Name(L"FBX読み込み");
+	window->Name(L"PMX読み込み");
 
 	//ウィンドウ作成
 	if (SUCCEEDED(window->Create(hInst)))

@@ -29,6 +29,15 @@ namespace ShunLib
 			SDEF,
 		};
 
+		enum MATERIAL_RENDER_TYPE
+		{
+			DUPLEX           = 0x01, // 両面描画
+			GROUND_SHADOW    = 0x02, // 地面影
+			SELF_SHADOW_MAP  = 0x04, // セルフシャドウマップへの描画
+			DRAW_SELF_SHADOW = 0x08, // セルフシャドウの描画,
+			EDGE             = 0x10, // エッジ描画		
+		};
+
 		//ボーンフラグ
 		enum BONE_FLAG
 		{

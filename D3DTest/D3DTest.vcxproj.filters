@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="PMX">
+      <UniqueIdentifier>{1fba91a1-f8b7-4033-9bee-b97f59dad995}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="WinMain.cpp">
@@ -28,7 +31,10 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="SL_PMXModel.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>PMX</Filter>
+    </ClCompile>
+    <ClCompile Include="SL_PMXModelData.cpp">
+      <Filter>PMX</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -41,19 +47,17 @@
     <ClInclude Include="SL_FbxSkinMesh.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="SL_PMXConstantNumber.h">
+      <Filter>PMX</Filter>
+    </ClInclude>
     <ClInclude Include="SL_PMXModel.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>PMX</Filter>
+    </ClInclude>
+    <ClInclude Include="SL_PMXModelData.h">
+      <Filter>PMX</Filter>
     </ClInclude>
     <ClInclude Include="SL_PMXStruct.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>PMX</Filter>
     </ClInclude>
-    <ClInclude Include="SL_PMXConstantNumber.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="hand_tex.fbx">
-      <Filter>リソース ファイル</Filter>
-    </None>
   </ItemGroup>
 </Project>
