@@ -5,6 +5,10 @@
 //* @author:S.Katou
 //************************************************/
 
+//テクスチャ―とサンプラー
+Texture2D g_texture    : register(t0);
+SamplerState g_sampler : register(s0);
+
 struct VS_INPUT
 {
     float4 pos    : POSITION;
@@ -64,29 +68,19 @@ PS_INPUT VS(VS_INPUT input)
 float4 PS(PS_INPUT input) : SV_Target
 {
     // ライト方向
-    float3 lightDirection = { 0, 1, -0.5 };
+    float3 lightDirection = { 0, 2, -0.5 };
+    	
+    float3 LightDir = normalize(lightDirection);
+    float3 ViewDir = normalize(input.eye);
+    float4 NL = saturate(dot(input.normal, LightDir))/2;
+	
+    float3 Reflect = normalize(NL * input.normal - LightDir);
+    float4 specular = pow(saturate(dot(Reflect, ViewDir)), 4);
 
-    // ハーフベクトルを求める
-    float3 halfVector = normalize(input.eye + lightDirection);
-   
-    // 拡散反射色を求める
-    float dif = dot(lightDirection, input.normal);
-  
-    // 鏡面反射色を求める
-    float3 spe = pow(max(0, dot(halfVector, normalize(input.normal))), specularPower) * spe.rgb;
-   
-    // 法線を正規化
-    input.normal = normalize(input.normal);
-   
-    // 環境色を追加
-    float4 color = ambient;
-  
-    // 拡散反射色を追加
-    color += diffuse * max(0, dif);
- 
-    // 鏡面反射色を追加
-    //color.rgb  += spe;
-    color = saturate(color);
- 
+    float4 color;
+    color = g_texture.Sample(g_sampler, input.uv);
+    color += diffuse * NL + specular * specular;
+	
+    //return g_texture.Sample(g_sampler, input.uv);
     return color;
 }

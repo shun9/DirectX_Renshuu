@@ -6,6 +6,7 @@
 //************************************************/
 #pragma once
 #include <memory>
+#include <string>
 #include <d3d11.h>
 #include <SL_Matrix.h>
 #include <SL_MacroConstants.h>
@@ -51,6 +52,9 @@ namespace ShunLib
 			ID3D11SamplerState* m_sampler;
 			ID3D11ShaderResourceView** m_texture;
 
+			//テクスチャのファイルパス
+			std::wstring m_filePath;
+
 		public:
 			PMXModel() :
 				m_vertexLayout  (nullptr),
@@ -82,6 +86,7 @@ namespace ShunLib
 
 			bool Init(char* file);
 			void Draw(const Matrix& world, const Matrix& view, const Matrix& proj);
+			void SetFilePath(wchar_t* path) { m_filePath = path; }
 
 		private:
 			bool InitShader();

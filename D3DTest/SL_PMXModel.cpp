@@ -5,6 +5,8 @@
 //* @author:S.Katou
 //************************************************/
 #include "SL_PMXModel.h"
+
+#include<SL_Conversion.h>
 #include "SL_Graphics.h"
 #include "SL_Window.h"
 
@@ -95,6 +97,9 @@ void PMXModel::Draw(const Matrix & world, const Matrix & view, const Matrix & pr
 		//プリミティブ・トポロジーをセット
 		context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+		//テクスチャーをシェーダーに渡す
+		context->PSSetSamplers(0, 1, &m_sampler);
+		context->PSSetShaderResources(0, 1, &m_texture[i]);
 
 		context->DrawIndexed(m_data->Material()->info[i].faceVertexCount, startIndex,0);
 		startIndex += m_data->Material()->info[i].faceVertexCount;
@@ -219,10 +224,13 @@ bool PMXModel::InitPolygon()
 		for (int i = 0; i < m_data->Material()->count; i++)
 		{
 			texIndex = m_data->Material()->info[i].textureTableReferenceIndex;
-			//if (FAILED(graphics->CreateShaderResourceView(m_data->Texture()->fileName[texIndex].str.c_str(),&m_texture[i])))
-			//{
-
-			//}
+			std::wstring path;
+			ShunLib::ToWiden(m_data->Texture()->fileName[texIndex].str,path);
+			path = m_filePath + path;
+			if (FAILED(graphics->CreateShaderResourceView(path.c_str(),&m_texture[i])))
+			{
+				return false;
+			}
 		}
 	}
 	return true;

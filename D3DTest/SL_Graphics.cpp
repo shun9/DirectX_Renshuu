@@ -10,10 +10,13 @@
 HRESULT ShunLib::Graphics::InitShader()
 {
 	m_pmxModel = new PMX::PMXModel();
+	
+	m_pmxModel->SetFilePath(L"IkazuchiModel\\");
 	if (!m_pmxModel->Init("IkazuchiModel\\Ikazuchi.pmx"))
 	{
 		return E_FAIL;
 	}
+
 
 	return S_OK;
 }
